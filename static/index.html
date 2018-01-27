@@ -33,7 +33,7 @@
                         </h2>
                     </div>
 
-                    <div class="column">
+                    <div class="column" v-if="select_packages">
                         <h4 class="subtitle">Select your preferred settings:</h4>
 
                         <!-- Build options -->
@@ -66,7 +66,28 @@
                             </div>
                         </div>
 
-                        <a class="button is-primary">Install!</a>
+                        <a class="button is-primary is-pulled-right" v-on:click="install">Install!</a>
+                    </div>
+
+                    <div class="column" v-else-if="is_installing">
+                        <h4 class="subtitle">Installing...</h4>
+                        <div v-html="config.general.installing_message"></div>
+                        <br />
+
+                        <progress class="progress is-info is-medium" v-bind:value="progress" max="100">
+                            {{ progress }}%
+                        </progress>
+                    </div>
+
+                    <div class="column" v-else-if="is_finished">
+                        <h4 class="subtitle">Thanks for installing {{ config.general.name }}!</h4>
+
+                        <a class="button is-primary is-pulled-right" v-on:click="exit">Exit</a>
+                    </div>
+
+                    <div class="column" v-else>
+                        <h4 class="subtitle">Oh no!</h4>
+                        <div>A error occured during installation. Please retry!</div>
                     </div>
                 </div>
             </div>
@@ -81,7 +102,11 @@
             el: '#app',
             data: {
                 config : config,
-                install_location : ""
+                install_location : "",
+                select_packages : true,
+                is_installing : false,
+                is_finished : false,
+                progress : 0
             },
             methods: {
                 "select_file": function() {
@@ -90,6 +115,21 @@
                             app.install_location = e.path;
                         }
                     });
+                },
+                "install": function() {
+                    this.select_packages = false;
+                    this.is_installing = true;
+
+                    setInterval(function() {
+                        app.progress += 5;
+                        if (app.progress >= 100) {
+                            app.is_installing = false;
+                            app.is_finished = true;
+                        }
+                    }, 100);
+                },
+                "exit": function() {
+                    ajax("/api/exit", function() {});
                 }
             }
         });

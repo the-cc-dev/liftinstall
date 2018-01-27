@@ -14,6 +14,7 @@ use std::error::Error;
 use std::net::{SocketAddr, IpAddr, Ipv4Addr};
 use std::thread::{self, JoinHandle};
 use std::str::FromStr;
+use std::process::exit;
 
 use assets;
 
@@ -113,6 +114,9 @@ impl WebServer {
                 };
 
                 Some(serde_json::to_string(&response).unwrap())
+            },
+            "exit" => {
+                exit(0);
             },
             _ => None
         }

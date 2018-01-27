@@ -18,7 +18,8 @@ pub struct PackageDescription {
 /// Describes the application itself.
 #[derive(Deserialize, Serialize, Clone)]
 pub struct GeneralConfig {
-    pub name : String
+    pub name : String,
+    pub installing_message : String
 }
 
 #[derive(Deserialize, Serialize, Clone)]

@@ -82,8 +82,6 @@ impl WebServer {
                 let ext = path[pos + 1 ..].to_owned();
                 path = path[0 .. pos].to_owned();
 
-                println!("Got query string: {}", ext);
-
                 Some(ext)
             },
             None => None
@@ -95,9 +93,7 @@ impl WebServer {
             "config" => Some(enscapsulate_json("config",
                                           &self.framework.get_config().to_json_str().unwrap())),
             "file-select" => {
-                println!("Pick folder!");
                 let file_dialog = nfd::open_pick_folder(None).unwrap();
-                println!("OK!");
                 let file = match file_dialog {
                     NfdResponse::Okay(path) => Some(path),
                     _ => None
@@ -106,7 +102,7 @@ impl WebServer {
                 let response = FileSelection {
                     path : file
                 };
-                println!("Built!");
+
                 Some(serde_json::to_string(&response).unwrap())
             }
             _ => None

@@ -57,7 +57,7 @@
                         <div class="field has-addons">
                             <div class="control is-expanded">
                                 <input class="input" type="text" v-model="install_location"
-                                       placeholder="%localappdata%\yuzu">
+                                       placeholder="Enter a install path here">
                             </div>
                             <div class="control">
                                 <a class="button is-info" v-on:click="select_file">
@@ -81,17 +81,22 @@
             el: '#app',
             data: {
                 config : config,
-                install_location : "%localappdata%\yuzu"
+                install_location : ""
             },
             methods: {
                 "select_file": function() {
                     ajax("/api/file-select", function(e) {
-                        alert(e);
                         if (e.path != null) {
                             app.install_location = e.path;
                         }
                     });
                 }
+            }
+        });
+
+        ajax("/api/default-path", function(e) {
+            if (e.path != null) {
+                app.install_location = e.path;
             }
         });
     </script>

@@ -10,21 +10,21 @@ use serde_json::{self, Error as SerdeError};
 /// Describes a overview of a individual package.
 #[derive(Deserialize, Serialize, Clone)]
 pub struct PackageDescription {
-    name : String,
-    description : String,
-    default : Option<bool>
+    pub name : String,
+    pub description : String,
+    pub default : Option<bool>
 }
 
 /// Describes the application itself.
 #[derive(Deserialize, Serialize, Clone)]
 pub struct GeneralConfig {
-    name : String
+    pub name : String
 }
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Config {
-    general : GeneralConfig,
-    packages : Vec<PackageDescription>
+    pub general : GeneralConfig,
+    pub packages : Vec<PackageDescription>
 }
 
 impl Config {

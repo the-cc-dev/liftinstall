@@ -104,7 +104,16 @@ impl WebServer {
                 };
 
                 Some(serde_json::to_string(&response).unwrap())
-            }
+            },
+            "default-path" => {
+                let path = self.framework.get_default_path();
+
+                let response = FileSelection {
+                    path
+                };
+
+                Some(serde_json::to_string(&response).unwrap())
+            },
             _ => None
         }
     }

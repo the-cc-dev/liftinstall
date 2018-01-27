@@ -33,6 +33,8 @@ static RAW_CONFIG : &'static str = include_str!("../config.toml");
 fn main() {
     let config = Config::from_toml_str(RAW_CONFIG).unwrap();
 
+    let app_name = config.general.name.clone();
+
     let framework = InstallerFramework::new(config);
 
     let server = WebServer::new(framework).unwrap();
@@ -51,7 +53,7 @@ fn main() {
     let userdata = ();
 
     run(
-        "yuzu Installer",
+        &format!("{} Installer", app_name),
         &http_address,
         Some(size),
         resizable,

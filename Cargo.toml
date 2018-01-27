@@ -5,7 +5,12 @@ authors = ["James <jselby@jselby.net>"]
 
 [dependencies]
 web-view = "0.1.2"
-tiny_http = "0.5.8"
+
+hyper = "0.11.15"
+hyper-tls = "0.1.2"
+tokio-core = "*"
+futures = "*"
+mime_guess = "1.8.3"
 
 includedir = "0.2.2"
 phf = "0.7.21"

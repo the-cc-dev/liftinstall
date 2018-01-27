@@ -1,7 +1,12 @@
 #![windows_subsystem = "windows"]
 
 extern crate web_view;
-extern crate tiny_http;
+
+extern crate hyper;
+extern crate hyper_tls;
+extern crate tokio_core;
+extern crate futures;
+extern crate mime_guess;
 
 extern crate includedir;
 extern crate phf;
@@ -42,8 +47,6 @@ fn main() {
     // Startup HTTP server for handling the web view
     let http_address = format!("http://{}", server.get_addr());
     println!("{}", http_address);
-
-    server.start();
 
     // Init the web view
     let size = (1024, 550);

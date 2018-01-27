@@ -10,22 +10,22 @@ use serde_json::{self, Error as SerdeError};
 /// Describes a overview of a individual package.
 #[derive(Deserialize, Serialize, Clone)]
 pub struct PackageDescription {
-    pub name : String,
-    pub description : String,
-    pub default : Option<bool>
+    pub name: String,
+    pub description: String,
+    pub default: Option<bool>,
 }
 
 /// Describes the application itself.
 #[derive(Deserialize, Serialize, Clone)]
 pub struct GeneralConfig {
-    pub name : String,
-    pub installing_message : String
+    pub name: String,
+    pub installing_message: String,
 }
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Config {
-    pub general : GeneralConfig,
-    pub packages : Vec<PackageDescription>
+    pub general: GeneralConfig,
+    pub packages: Vec<PackageDescription>,
 }
 
 impl Config {
@@ -35,7 +35,7 @@ impl Config {
     }
 
     /// Builds a configuration from a specified TOML string.
-    pub fn from_toml_str(contents : &str) -> Result<Self, TomlError> {
+    pub fn from_toml_str(contents: &str) -> Result<Self, TomlError> {
         toml::from_str(contents)
     }
 }

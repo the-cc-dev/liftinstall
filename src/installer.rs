@@ -12,7 +12,7 @@ use config::Config;
 /// The installer framework contains metadata about packages, what is installable, what isn't,
 /// etc.
 pub struct InstallerFramework {
-    config : Config
+    config: Config,
 }
 
 impl InstallerFramework {
@@ -27,7 +27,7 @@ impl InstallerFramework {
 
         let base_dir = match var("LOCALAPPDATA") {
             Ok(path) => PathBuf::from(path),
-            Err(_) => home_dir()?
+            Err(_) => home_dir()?,
         };
 
         println!("{:?}", base_dir);
@@ -39,9 +39,7 @@ impl InstallerFramework {
     }
 
     /// Creates a new instance of the Installer Framework with a specified Config.
-    pub fn new(config : Config) -> Self {
-        InstallerFramework {
-            config
-        }
+    pub fn new(config: Config) -> Self {
+        InstallerFramework { config }
     }
 }

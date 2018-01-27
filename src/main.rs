@@ -2,11 +2,11 @@
 
 extern crate web_view;
 
+extern crate futures;
 extern crate hyper;
 extern crate hyper_tls;
-extern crate tokio_core;
-extern crate futures;
 extern crate mime_guess;
+extern crate tokio_core;
 
 extern crate includedir;
 extern crate phf;
@@ -33,7 +33,7 @@ use installer::InstallerFramework;
 use rest::WebServer;
 
 // TODO: Fetch this over a HTTP request?
-static RAW_CONFIG : &'static str = include_str!("../config.toml");
+static RAW_CONFIG: &'static str = include_str!("../config.toml");
 
 fn main() {
     let config = Config::from_toml_str(RAW_CONFIG).unwrap();
@@ -63,6 +63,6 @@ fn main() {
         debug,
         init_cb,
         /* frontend_cb: */ |_, _, _| {},
-        userdata
+        userdata,
     );
 }

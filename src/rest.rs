@@ -12,11 +12,11 @@ use futures::future;
 use futures::future::FutureResult;
 
 use hyper;
-use hyper::{Get, StatusCode, Error as HyperError};
+use hyper::{Error as HyperError, Get, StatusCode};
 use hyper::header::{ContentLength, ContentType};
-use hyper::server::{Http, Service, Request, Response};
+use hyper::server::{Http, Request, Response, Service};
 
-use std::net::{SocketAddr, IpAddr, Ipv4Addr};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::thread::{self, JoinHandle};
 use std::process::exit;
 use std::sync::Arc;
@@ -28,13 +28,13 @@ use installer::InstallerFramework;
 
 #[derive(Serialize)]
 struct FileSelection {
-    path : Option<String>
+    path: Option<String>,
 }
 
 /// Encapsulates Hyper's state.
 pub struct WebServer {
-    handle : JoinHandle<()>,
-    addr : SocketAddr
+    _handle: JoinHandle<()>,
+    addr: SocketAddr,
 }
 
 impl WebServer {
@@ -44,25 +44,27 @@ impl WebServer {
     }
 
     /// Creates a new web server, bound to a random port on localhost.
-    pub fn new(framework : InstallerFramework) -> Result<Self, HyperError> {
-        WebServer::with_addr(framework, SocketAddr::new(
-            IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0))
+    pub fn new(framework: InstallerFramework) -> Result<Self, HyperError> {
+        WebServer::with_addr(
+            framework,
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0),
+        )
     }
 
     /// Creates a new web server with the specified address.
-    pub fn with_addr(framework : InstallerFramework, addr : SocketAddr)
-        -> Result<Self, HyperError> {
+    pub fn with_addr(framework: InstallerFramework, addr: SocketAddr) -> Result<Self, HyperError> {
         let (sender, receiver) = channel();
 
         let handle = thread::spawn(move || {
             let shared_framework = Arc::new(framework);
 
-            let server =
-                Http::new().bind(&addr, move ||
+            let server = Http::new()
+                .bind(&addr, move || {
                     Ok(WebService {
-                        framework : shared_framework.clone()
+                        framework: shared_framework.clone(),
                     })
-                ).unwrap();
+                })
+                .unwrap();
 
             sender.send(server.local_addr().unwrap()).unwrap();
 
@@ -72,44 +74,45 @@ impl WebServer {
         let addr = receiver.recv().unwrap();
 
         Ok(WebServer {
-            handle, addr
+            _handle: handle,
+            addr,
         })
     }
 }
 
 struct WebService {
-    framework : Arc<InstallerFramework>
+    framework: Arc<InstallerFramework>,
 }
 
 impl Service for WebService {
     type Request = Request;
     type Response = Response;
     type Error = hyper::Error;
-    type Future =  FutureResult<Self::Response, Self::Error>;
+    type Future = FutureResult<Self::Response, Self::Error>;
 
     fn call(&self, req: Self::Request) -> Self::Future {
         future::ok(match (req.method(), req.path()) {
             // This endpoint should be usable directly from a <script> tag during loading.
             // TODO: Handle errors
             (&Get, "/api/config") => {
-                let file = enscapsulate_json("config",
-                                             &self.framework.get_config().to_json_str().unwrap());
+                let file = enscapsulate_json(
+                    "config",
+                    &self.framework.get_config().to_json_str().unwrap(),
+                );
 
                 Response::<hyper::Body>::new()
                     .with_header(ContentLength(file.len() as u64))
                     .with_header(ContentType::json())
                     .with_body(file)
-            },
+            }
             (&Get, "/api/file-select") => {
                 let file_dialog = nfd::open_pick_folder(None).unwrap();
                 let file = match file_dialog {
                     NfdResponse::Okay(path) => Some(path),
-                    _ => None
+                    _ => None,
                 };
 
-                let response = FileSelection {
-                    path : file
-                };
+                let response = FileSelection { path: file };
 
                 let file = serde_json::to_string(&response).unwrap();
 
@@ -117,13 +120,11 @@ impl Service for WebService {
                     .with_header(ContentLength(file.len() as u64))
                     .with_header(ContentType::json())
                     .with_body(file)
-            },
+            }
             (&Get, "/api/default-path") => {
                 let path = self.framework.get_default_path();
 
-                let response = FileSelection {
-                    path
-                };
+                let response = FileSelection { path };
 
                 let file = serde_json::to_string(&response).unwrap();
 
@@ -131,16 +132,16 @@ impl Service for WebService {
                     .with_header(ContentLength(file.len() as u64))
                     .with_header(ContentType::json())
                     .with_body(file)
-            },
+            }
             (&Get, "/api/exit") => {
                 exit(0);
-            },
+            }
 
             // Static file handler
             (&Get, _) => {
                 // At this point, we have a web browser client. Search for a index page
                 // if needed
-                let mut path : String = req.path().to_owned();
+                let mut path: String = req.path().to_owned();
                 if path.ends_with("/") {
                     path += "index.html";
                 }
@@ -152,19 +153,16 @@ impl Service for WebService {
                         .with_header(ContentLength(file.len() as u64))
                         .with_header(content_type)
                         .with_body(file),
-                    None => Response::new()
-                        .with_status(StatusCode::NotFound)
+                    None => Response::new().with_status(StatusCode::NotFound),
                 }
-            },
-            // Fallthrough for POST/PUT/CONNECT/...
-            _ => {
-                Response::new().with_status(StatusCode::NotFound)
             }
+            // Fallthrough for POST/PUT/CONNECT/...
+            _ => Response::new().with_status(StatusCode::NotFound),
         })
     }
 }
 
 /// Encapsulates JSON as a injectable Javascript script.
-fn enscapsulate_json(field_name : &str, json : &str) -> String {
+fn enscapsulate_json(field_name: &str, json: &str) -> String {
     format!("var {} = {};", field_name, json)
 }

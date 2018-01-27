@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -11,72 +11,71 @@
     <link rel="stylesheet" href="/css/main.css" type="text/css">
 </head>
 <body>
-    <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
-        <div class="navbar-brand">
+    <div id="app">
+        <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+            <div class="navbar-brand">
             <span class="navbar-item">
-                <img src="/img/logo.png" alt="Logo">
+                <img src="/img/logo.png" v-bind:alt="config.general.name">
             </span>
-        </div>
-    </nav>
+            </div>
+        </nav>
 
-    <!-- Main content -->
-    <section class="section">
-        <div class="container">
-            <div class="columns">
-                <div class="column is-one-third">
-                    <h1 class="title">
-                        Welcome to the yuzu installer!
-                    </h1>
-                    <h2 class="subtitle">
-                        We will have you up and running in just a few moments.
-                    </h2>
-                </div>
+        <!-- Main content -->
+        <section class="section">
+            <div class="container">
+                <div class="columns">
+                    <div class="column is-one-third">
+                        <h1 class="title">
+                            Welcome to the {{ config.general.name }} installer!
+                        </h1>
+                        <h2 class="subtitle">
+                            We will have you up and running in just a few moments.
+                        </h2>
+                    </div>
 
-                <div class="column">
-                    <h4 class="subtitle">Select your preferred settings:</h4>
+                    <div class="column">
+                        <h4 class="subtitle">Select your preferred settings:</h4>
 
-                    <!-- Build options -->
-                    <div class="tile is-ancestor">
-                        <div class="tile is-parent">
-                            <div class="tile is-child">
-                                <div class="box">
-                                    <label class="checkbox">
-                                        <input type="checkbox" />
-                                        yuzu Nightly
-                                    </label>
-                                    <p>
-                                        The nightly build of yuzu contains already reviewed and tested features.
-                                    </p>
+                        <!-- Build options -->
+                        <div class="tile is-ancestor">
+                            <div class="tile is-parent" v-for="package in config.packages" :index="package.name">
+                                <div class="tile is-child">
+                                    <div class="box">
+                                        <label class="checkbox">
+                                            <input type="checkbox" v-bind:checked="package.default" />
+                                            {{ package.name }}
+                                        </label>
+                                        <p>
+                                            {{ package.description }}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="tile is-parent">
-                            <div class="tile is-child">
-                                <div class="box">
-                                    <label class="checkbox">
-                                        <input type="checkbox" />
-                                        yuzu Canary
-                                    </label>
-                                    <p>
-                                        The canary build of yuzu has additional features that are still waiting on
-                                        review.
-                                    </p>
-                                </div>
+
+                        <div class="field">
+                            <label class="label subtitle is-6">Install Location</label>
+                            <div class="control">
+                                <input class="input" type="text" placeholder="%localappdata%\yuzu">
                             </div>
                         </div>
-                    </div>
 
-                    <div class="field">
-                        <label class="label subtitle is-6">Install Location</label>
-                        <div class="control">
-                            <input class="input" type="text" placeholder="%localappdata%\yuzu">
-                        </div>
+                        <a class="button is-primary">Install!</a>
                     </div>
-
-                    <a class="button is-primary">Install!</a>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </div>
+
+    <script src="/api/config"></script>
+    <script src="/js/vue.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                config : config
+            }
+        });
+    </script>
 </body>
 </html>

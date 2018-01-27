@@ -1,4 +1,4 @@
-//#![windows_subsystem = "windows"]
+#![windows_subsystem = "windows"]
 
 extern crate web_view;
 extern crate tiny_http;
@@ -6,54 +6,40 @@ extern crate tiny_http;
 extern crate includedir;
 extern crate phf;
 
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+extern crate toml;
+
 mod assets;
+mod rest;
+mod config;
+mod installer;
 
 use web_view::*;
 
-use tiny_http::Server;
-use tiny_http::Response;
-use tiny_http::Header;
+use config::Config;
 
-use std::thread;
-use std::str::FromStr;
+use installer::InstallerFramework;
+
+use rest::WebServer;
+
+// TODO: Fetch this over a HTTP request?
+static RAW_CONFIG : &'static str = include_str!("../config.toml");
 
 fn main() {
+    let config = Config::from_toml_str(RAW_CONFIG).unwrap();
+
+    let framework = InstallerFramework::new(config);
+
+    let server = WebServer::new(framework).unwrap();
+
     // Startup HTTP server for handling the web view
-    let server = Server::http("127.0.0.1:0").unwrap();
+    let http_address = format!("http://{}", server.get_addr());
+    println!("{}", http_address);
 
-    let http_address = format!("http://{}", server.server_addr());
-    println!("{}", format!("{}", server.server_addr()));
-
-    let _ = thread::spawn(move || {
-        loop {
-            // blocks until the next request is received
-            let request = match server.recv() {
-                Ok(rq) => rq,
-                Err(e) => { println!("error: {}", e); break }
-            };
-
-            // Work out what they want
-            let mut url : String = request.url().into();
-            if url.ends_with("/") {
-                url += "index.html";
-            }
-
-            println!("Requesting: {}", url);
-
-            match assets::file_from_string(&url) {
-                Some((content_type, file)) => {
-                    let mut response = Response::from_data(file);
-                    if let Some(content_type) = content_type {
-                        response.add_header(Header::from_str(
-                            &format!("Content-Type:{}", content_type)).unwrap())
-                    }
-
-                    request.respond(response)
-                },
-                None => request.respond(Response::empty(404))
-            }.unwrap();
-        }
-    });
+    server.start();
 
     // Init the web view
     let size = (1024, 550);

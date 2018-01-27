@@ -10,5 +10,11 @@ tiny_http = "0.5.8"
 includedir = "0.2.2"
 phf = "0.7.21"
 
+serde = "1.0.27"
+serde_derive = "1.0.27"
+serde_json = "1.0.9"
+
+toml = "0.4"
+
 [build-dependencies]
 includedir_codegen = "0.2.0"

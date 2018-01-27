@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml" xmlns:v-on="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -53,10 +53,16 @@
                             </div>
                         </div>
 
-                        <div class="field">
-                            <label class="label subtitle is-6">Install Location</label>
+                        <div class="subtitle is-6">Install Location</div>
+                        <div class="field has-addons">
+                            <div class="control is-expanded">
+                                <input class="input" type="text" v-model="install_location"
+                                       placeholder="%localappdata%\yuzu">
+                            </div>
                             <div class="control">
-                                <input class="input" type="text" placeholder="%localappdata%\yuzu">
+                                <a class="button is-info" v-on:click="select_file">
+                                    Select
+                                </a>
                             </div>
                         </div>
 
@@ -68,12 +74,24 @@
     </div>
 
     <script src="/api/config"></script>
+    <script src="/js/helpers.js"></script>
     <script src="/js/vue.js"></script>
     <script>
         var app = new Vue({
             el: '#app',
             data: {
-                config : config
+                config : config,
+                install_location : "%localappdata%\yuzu"
+            },
+            methods: {
+                "select_file": function() {
+                    ajax("/api/file-select", function(e) {
+                        alert(e);
+                        if (e.path != null) {
+                            app.install_location = e.path;
+                        }
+                    });
+                }
             }
         });
     </script>

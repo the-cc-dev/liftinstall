@@ -12,6 +12,8 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate toml;
 
+extern crate nfd;
+
 mod assets;
 mod rest;
 mod config;

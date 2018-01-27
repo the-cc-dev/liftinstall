@@ -5,6 +5,11 @@
 
 use tiny_http::{Server, Request, Response, Header};
 
+use nfd;
+use nfd::Response as NfdResponse;
+
+use serde_json;
+
 use std::error::Error;
 use std::net::{SocketAddr, IpAddr, Ipv4Addr};
 use std::thread::{self, JoinHandle};
@@ -13,6 +18,11 @@ use std::str::FromStr;
 use assets;
 
 use installer::InstallerFramework;
+
+#[derive(Serialize)]
+struct FileSelection {
+    path : Option<String>
+}
 
 /// Encapsulates tiny_http's state.
 pub struct WebServer {
@@ -34,7 +44,9 @@ impl WebServer {
             let call_response = self.rest_call(api_url);
 
             match call_response {
-                Some(response) => request.respond(Response::from_string(response)),
+                Some(response) => request.respond(Response::from_data(response.into_bytes())
+                    .with_header(Header::from_str("Content-Type: application/json")
+                        .unwrap())),
                 None => request.respond(Response::empty(404))
             }.unwrap();
             return;
@@ -51,7 +63,7 @@ impl WebServer {
                 let mut response = Response::from_data(file);
                 if let Some(content_type) = content_type {
                     response.add_header(Header::from_str(
-                        &format!("Content-Type:{}", content_type)).unwrap())
+                        &format!("Content-Type: {}", content_type)).unwrap())
                 }
 
                 request.respond(response)
@@ -62,10 +74,41 @@ impl WebServer {
 
     /// Makes a call to a REST endpoint.
     fn rest_call(&self, path : &str) -> Option<String> {
-        match path {
+        let mut path = path.to_owned();
+
+        // Strip off query params
+        let query = match path.rfind("?") {
+            Some(pos) => {
+                let ext = path[pos + 1 ..].to_owned();
+                path = path[0 .. pos].to_owned();
+
+                println!("Got query string: {}", ext);
+
+                Some(ext)
+            },
+            None => None
+        };
+
+        match path.as_str() {
             // This endpoint should be usable directly from a <script> tag during loading.
+            // TODO: Handle errors
             "config" => Some(enscapsulate_json("config",
                                           &self.framework.get_config().to_json_str().unwrap())),
+            "file-select" => {
+                println!("Pick folder!");
+                let file_dialog = nfd::open_pick_folder(None).unwrap();
+                println!("OK!");
+                let file = match file_dialog {
+                    NfdResponse::Okay(path) => Some(path),
+                    _ => None
+                };
+
+                let response = FileSelection {
+                    path : file
+                };
+                println!("Built!");
+                Some(serde_json::to_string(&response).unwrap())
+            }
             _ => None
         }
     }

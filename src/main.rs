@@ -2,12 +2,6 @@
 
 extern crate web_view;
 
-extern crate futures;
-extern crate hyper;
-extern crate hyper_tls;
-extern crate mime_guess;
-extern crate tokio_core;
-
 extern crate includedir;
 extern crate phf;
 
@@ -16,8 +10,6 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate toml;
-
-extern crate nfd;
 
 mod assets;
 mod rest;

@@ -3,18 +3,23 @@
 /// Provides a HTTP/REST server for both frontend<->backend communication, as well
 /// as talking to external applications.
 
-use nfd;
-use nfd::Response as NfdResponse;
+extern crate futures;
+extern crate hyper;
+extern crate hyper_tls;
+extern crate tokio_core;
+
+extern crate nfd;
+
+use rest::nfd::Response as NfdResponse;
 
 use serde_json;
 
-use futures::future;
-use futures::future::FutureResult;
+use rest::futures::future;
+use rest::futures::future::FutureResult;
 
-use hyper;
-use hyper::{Error as HyperError, Get, StatusCode};
-use hyper::header::{ContentLength, ContentType};
-use hyper::server::{Http, Request, Response, Service};
+use rest::hyper::{Error as HyperError, Get, StatusCode};
+use rest::hyper::header::{ContentLength, ContentType};
+use rest::hyper::server::{Http, Request, Response, Service};
 
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::thread::{self, JoinHandle};
@@ -149,10 +154,13 @@ impl Service for WebService {
                 println!("Trying {} => {}", req.path(), path);
 
                 match assets::file_from_string(&path) {
-                    Some((content_type, file)) => Response::<hyper::Body>::new()
-                        .with_header(ContentLength(file.len() as u64))
-                        .with_header(content_type)
-                        .with_body(file),
+                    Some((content_type, file)) => {
+                        let content_type = ContentType(content_type.parse().unwrap());
+                        Response::<hyper::Body>::new()
+                            .with_header(ContentLength(file.len() as u64))
+                            .with_header(content_type)
+                            .with_body(file)
+                    },
                     None => Response::new().with_status(StatusCode::NotFound),
                 }
             }

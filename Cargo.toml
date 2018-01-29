@@ -11,6 +11,7 @@ hyper-tls = "0.1.2"
 tokio-core = "*"
 futures = "*"
 mime_guess = "1.8.3"
+url = "*"
 
 includedir = "0.2.2"
 phf = "0.7.21"

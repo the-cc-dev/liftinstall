@@ -4,23 +4,29 @@
 /// as talking to external applications.
 
 extern crate nfd;
+extern crate url;
 
-use rest::nfd::Response as NfdResponse;
+use self::nfd::Response as NfdResponse;
 
 use serde_json;
 
+use futures::Stream;
+use futures::Future;
 use futures::future;
 use futures::future::FutureResult;
 
-use hyper::{self, Error as HyperError, Get, StatusCode};
+use hyper::{self, Error as HyperError, Get, Post, StatusCode};
 use hyper::header::{ContentLength, ContentType};
 use hyper::server::{Http, Request, Response, Service};
+
+use self::url::form_urlencoded;
 
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::thread::{self, JoinHandle};
 use std::process::exit;
 use std::sync::Arc;
 use std::sync::mpsc::channel;
+use std::collections::HashMap;
 
 use assets;
 
@@ -90,11 +96,11 @@ impl Service for WebService {
     type Request = Request;
     type Response = Response;
     type Error = hyper::Error;
-    type Future = FutureResult<Self::Response, Self::Error>;
+    type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
 
     /// HTTP request handler
     fn call(&self, req: Self::Request) -> Self::Future {
-        future::ok(match (req.method(), req.path()) {
+        Box::new(future::ok(match (req.method(), req.path()) {
             // This endpoint should be usable directly from a <script> tag during loading.
             // TODO: Handle errors
             (&Get, "/api/config") => {
@@ -139,6 +145,22 @@ impl Service for WebService {
             (&Get, "/api/exit") => {
                 exit(0);
             }
+            (&Post, "/api/start-install") => {
+                // We need to bit of pipelining to get this to work
+                return Box::new(req.body().concat2().map(|b| {
+                    let results = form_urlencoded::parse(b.as_ref())
+                        .into_owned().collect::<HashMap<String, String>>();
+
+                    println!("{:?}", results);
+
+                    let file = serde_json::to_string(&{}).unwrap();
+
+                    Response::<hyper::Body>::new()
+                        .with_header(ContentLength(file.len() as u64))
+                        .with_header(ContentType::json())
+                        .with_body(file)
+                }));
+            }
 
             // Static file handler
             (&Get, _) => {
@@ -164,7 +186,7 @@ impl Service for WebService {
             }
             // Fallthrough for POST/PUT/CONNECT/...
             _ => Response::new().with_status(StatusCode::NotFound),
-        })
+        }))
     }
 }
 

@@ -42,7 +42,7 @@
                                 <div class="tile is-child">
                                     <div class="box">
                                         <label class="checkbox">
-                                            <input type="checkbox" v-bind:checked="package.default" />
+                                            <input type="checkbox" v-model="package.default" />
                                             {{ package.name }}
                                         </label>
                                         <p>
@@ -120,13 +120,28 @@
                     this.select_packages = false;
                     this.is_installing = true;
 
-                    setInterval(function() {
-                        app.progress += 5;
-                        if (app.progress >= 100) {
-                            app.is_installing = false;
-                            app.is_finished = true;
+                    var results = {};
+
+                    console.log(this.config.packages);
+
+                    for (var package_index = 0; package_index < this.config.packages.length; package_index++) {
+                        var current_package = this.config.packages[package_index];
+                        if (current_package.default != null) {
+                            results[current_package.name] = current_package.default;
                         }
-                    }, 100);
+                    }
+                    console.log(results);
+
+                    ajax("/api/start-install", function(e) {
+                        // TODO: Remove fake loading
+                        setInterval(function() {
+                            app.progress += 5;
+                            if (app.progress >= 100) {
+                                app.is_installing = false;
+                                app.is_finished = true;
+                            }
+                        }, 100);
+                    }, undefined, results);
                 },
                 "exit": function() {
                     ajax("/api/exit", function() {});

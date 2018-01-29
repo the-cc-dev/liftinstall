@@ -114,6 +114,7 @@ impl Service for WebService {
                     .with_header(ContentType::json())
                     .with_body(file)
             }
+            // Opens a file dialog and returns the path as a string
             (&Get, "/api/file-select") => {
                 let file_dialog = nfd::open_pick_folder(None).unwrap();
                 let file = match file_dialog {
@@ -130,6 +131,7 @@ impl Service for WebService {
                     .with_header(ContentType::json())
                     .with_body(file)
             }
+            // Returns the default path for a installation
             (&Get, "/api/default-path") => {
                 let path = self.framework.get_default_path();
 
@@ -142,6 +144,7 @@ impl Service for WebService {
                     .with_header(ContentType::json())
                     .with_body(file)
             }
+            // Immediately exits the application
             (&Get, "/api/exit") => {
                 exit(0);
             }

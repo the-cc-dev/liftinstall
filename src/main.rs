@@ -39,9 +39,6 @@ static RAW_CONFIG: &'static str = include_str!("../config.toml");
 fn main() {
     let config = Config::from_toml_str(RAW_CONFIG).unwrap();
 
-    /*let github_releases = sources::github::GithubReleases{};
-    println!("{:?}", github_releases.get_current_releases(&config.packages[0].source.config));*/
-
     let app_name = config.general.name.clone();
 
     let framework = InstallerFramework::new(config);

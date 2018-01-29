@@ -17,6 +17,7 @@ extern crate serde_json;
 extern crate toml;
 
 extern crate semver;
+extern crate regex;
 
 mod assets;
 mod rest;

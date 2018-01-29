@@ -9,7 +9,7 @@ pub use semver::Version as SemverVersion;
 pub use toml::value::Value as TomlValue;
 
 /// The version of an application.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Version {
     Semver(SemverVersion),
     Integer(u64)

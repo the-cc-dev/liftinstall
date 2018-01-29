@@ -27,6 +27,12 @@ struct GithubConfig {
     repo : String
 }
 
+impl GithubReleases {
+    pub fn new() -> Self {
+        GithubReleases {}
+    }
+}
+
 impl ReleaseSource for GithubReleases {
     fn get_current_releases(&self, config: &TomlValue) -> Result<Vec<Release>, String> {
         // Reparse our Config as strongly typed

@@ -13,7 +13,6 @@ use serde_json;
 use futures::Stream;
 use futures::Future;
 use futures::future;
-use futures::future::FutureResult;
 
 use hyper::{self, Error as HyperError, Get, Post, StatusCode};
 use hyper::header::{ContentLength, ContentType};
@@ -150,11 +149,25 @@ impl Service for WebService {
             }
             (&Post, "/api/start-install") => {
                 // We need to bit of pipelining to get this to work
-                return Box::new(req.body().concat2().map(|b| {
+                let cloned_element = self.framework.clone();
+
+                return Box::new(req.body().concat2().map(move |b| {
                     let results = form_urlencoded::parse(b.as_ref())
                         .into_owned().collect::<HashMap<String, String>>();
 
-                    println!("{:?}", results);
+                    let mut to_install = Vec::new();
+
+                    // Transform results into just an array of stuff to install
+                    for (key, value) in results.iter() {
+                        if value == "true" {
+                            to_install.push(key.to_owned());
+                        }
+                    }
+
+                    // Startup a thread to do this operation for us
+                    thread::spawn(move || {
+                        cloned_element.install(to_install);
+                    });
 
                     let file = serde_json::to_string(&{}).unwrap();
 
@@ -173,8 +186,6 @@ impl Service for WebService {
                 if path.ends_with("/") {
                     path += "index.html";
                 }
-
-                println!("Trying {} => {}", req.path(), path);
 
                 match assets::file_from_string(&path) {
                     Some((content_type, file)) => {

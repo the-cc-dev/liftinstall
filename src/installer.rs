@@ -30,12 +30,14 @@ impl InstallerFramework {
             Err(_) => home_dir()?,
         };
 
-        println!("{:?}", base_dir);
-
         let file = base_dir.join(app_name);
-        println!("{:?}", file);
 
         Some(file.to_str()?.to_owned())
+    }
+
+    /// Sends a request for something to be installed.
+    pub fn install(&self, items : Vec<String>) {
+        println!("Framework: Installing {:?}", items);
     }
 
     /// Creates a new instance of the Installer Framework with a specified Config.

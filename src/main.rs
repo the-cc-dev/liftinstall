@@ -11,10 +11,13 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate toml;
 
+extern crate semver;
+
 mod assets;
 mod rest;
 mod config;
 mod installer;
+mod sources;
 
 use web_view::*;
 
@@ -44,8 +47,6 @@ fn main() {
     let size = (1024, 550);
     let resizable = false;
     let debug = true;
-    let init_cb = |_| {};
-    let userdata = ();
 
     run(
         &format!("{} Installer", app_name),
@@ -53,8 +54,8 @@ fn main() {
         Some(size),
         resizable,
         debug,
-        init_cb,
-        /* frontend_cb: */ |_, _, _| {},
-        userdata,
+        |_| {},
+        |_, _, _| {},
+        (),
     );
 }

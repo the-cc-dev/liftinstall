@@ -7,12 +7,20 @@ use toml::de::Error as TomlError;
 
 use serde_json::{self, Error as SerdeError};
 
+/// Description of the source of a package.
+#[derive(Deserialize, Serialize, Clone)]
+pub struct PackageSource {
+    pub name : String,
+    pub config : toml::Value
+}
+
 /// Describes a overview of a individual package.
 #[derive(Deserialize, Serialize, Clone)]
 pub struct PackageDescription {
     pub name: String,
     pub description: String,
     pub default: Option<bool>,
+    pub source: PackageSource
 }
 
 /// Describes the application itself.

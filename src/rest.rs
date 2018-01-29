@@ -36,7 +36,8 @@ struct FileSelection {
     path: Option<String>,
 }
 
-/// Encapsulates Hyper's state.
+/// Acts as a communication mechanism between the Hyper WebService and the rest of the
+/// application.
 pub struct WebServer {
     _handle: JoinHandle<()>,
     addr: SocketAddr,
@@ -85,6 +86,7 @@ impl WebServer {
     }
 }
 
+/// Holds internal state for Hyper
 struct WebService {
     framework: Arc<InstallerFramework>,
 }
@@ -95,6 +97,7 @@ impl Service for WebService {
     type Error = hyper::Error;
     type Future = FutureResult<Self::Response, Self::Error>;
 
+    /// HTTP request handler
     fn call(&self, req: Self::Request) -> Self::Future {
         future::ok(match (req.method(), req.path()) {
             // This endpoint should be usable directly from a <script> tag during loading.

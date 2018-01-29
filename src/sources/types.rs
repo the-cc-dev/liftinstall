@@ -4,8 +4,6 @@
 
 use std::cmp::Ordering;
 
-use installer::InstallerFramework;
-
 pub use semver::Version as SemverVersion;
 
 pub use toml::value::Value as TomlValue;
@@ -29,12 +27,12 @@ impl Version {
     }
 
     /// Returns a new Version, backed by semver.
-    fn new_semver(version : SemverVersion) -> Version {
+    pub fn new_semver(version : SemverVersion) -> Version {
         Version::Semver(version)
     }
 
     /// Returns a new Version, backed by a integer.
-    fn new_number(version : u64) -> Version {
+    pub fn new_number(version : u64) -> Version {
         Version::Integer(version)
     }
 }

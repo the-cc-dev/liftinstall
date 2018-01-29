@@ -2,6 +2,11 @@
 
 extern crate web_view;
 
+extern crate futures;
+extern crate hyper;
+extern crate hyper_tls;
+extern crate tokio_core;
+
 extern crate includedir;
 extern crate phf;
 
@@ -27,12 +32,16 @@ use installer::InstallerFramework;
 
 use rest::WebServer;
 
+use sources::types::ReleaseSource;
+
 // TODO: Fetch this over a HTTP request?
 static RAW_CONFIG: &'static str = include_str!("../config.toml");
 
 fn main() {
     let config = Config::from_toml_str(RAW_CONFIG).unwrap();
 
+    let github_releases = sources::github::GithubReleases{};
+    println!("{:?}", github_releases.get_current_releases(&config.packages[0].source.config));
     let app_name = config.general.name.clone();
 
     let framework = InstallerFramework::new(config);

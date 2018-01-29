@@ -3,23 +3,18 @@
 /// Provides a HTTP/REST server for both frontend<->backend communication, as well
 /// as talking to external applications.
 
-extern crate futures;
-extern crate hyper;
-extern crate hyper_tls;
-extern crate tokio_core;
-
 extern crate nfd;
 
 use rest::nfd::Response as NfdResponse;
 
 use serde_json;
 
-use rest::futures::future;
-use rest::futures::future::FutureResult;
+use futures::future;
+use futures::future::FutureResult;
 
-use rest::hyper::{Error as HyperError, Get, StatusCode};
-use rest::hyper::header::{ContentLength, ContentType};
-use rest::hyper::server::{Http, Request, Response, Service};
+use hyper::{self, Error as HyperError, Get, StatusCode};
+use hyper::header::{ContentLength, ContentType};
+use hyper::server::{Http, Request, Response, Service};
 
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::thread::{self, JoinHandle};

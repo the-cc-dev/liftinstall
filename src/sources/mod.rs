@@ -2,6 +2,6 @@
 ///
 /// Contains backends to various release distribution services.
 
-mod types;
+pub mod types;
 
-mod github;
+pub mod github;

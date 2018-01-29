@@ -13,10 +13,9 @@ use sources::get_by_name;
 /// Description of the source of a package.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct PackageSource {
-    pub name : String,
-    #[serde(rename="match")]
-    pub match_regex : String,
-    pub config : toml::Value
+    pub name: String,
+    #[serde(rename = "match")] pub match_regex: String,
+    pub config: toml::Value,
 }
 
 /// Describes a overview of a individual package.
@@ -25,7 +24,7 @@ pub struct PackageDescription {
     pub name: String,
     pub description: String,
     pub default: Option<bool>,
-    pub source: PackageSource
+    pub source: PackageSource,
 }
 
 /// Describes the application itself.
@@ -58,7 +57,7 @@ impl PackageSource {
     pub fn get_current_releases(&self) -> Result<Vec<Release>, String> {
         let package_handler = match get_by_name(&self.name) {
             Some(v) => v,
-            _ => return Err(format!("Handler {} not found", self.name))
+            _ => return Err(format!("Handler {} not found", self.name)),
         };
 
         package_handler.get_current_releases(&self.config)

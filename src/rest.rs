@@ -2,7 +2,6 @@
 ///
 /// Provides a HTTP/REST server for both frontend<->backend communication, as well
 /// as talking to external applications.
-
 extern crate nfd;
 extern crate url;
 
@@ -153,7 +152,8 @@ impl Service for WebService {
 
                 return Box::new(req.body().concat2().map(move |b| {
                     let results = form_urlencoded::parse(b.as_ref())
-                        .into_owned().collect::<HashMap<String, String>>();
+                        .into_owned()
+                        .collect::<HashMap<String, String>>();
 
                     let mut to_install = Vec::new();
 
@@ -194,7 +194,7 @@ impl Service for WebService {
                             .with_header(ContentLength(file.len() as u64))
                             .with_header(content_type)
                             .with_body(file)
-                    },
+                    }
                     None => Response::new().with_status(StatusCode::NotFound),
                 }
             }

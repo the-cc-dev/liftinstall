@@ -39,7 +39,7 @@ impl InstallerFramework {
     }
 
     /// Sends a request for something to be installed.
-    pub fn install(&self, items : Vec<String>) {
+    pub fn install(&self, items: Vec<String>) {
         // TODO: Error handling
         println!("Framework: Installing {:?}", items);
 
@@ -60,17 +60,21 @@ impl InstallerFramework {
 
             let results = package.source.get_current_releases().unwrap();
 
-            println!("Got releases");
-
             let filtered_regex = package.source.match_regex.replace("#PLATFORM#", OS);
-            println!("Filtered regex: {}" , filtered_regex);
             let regex = Regex::new(&filtered_regex).unwrap();
 
             // Find the latest release in here
-            let latest_result = results.into_iter()
-                .filter(|f| f.files.iter().filter(|x| regex.is_match(x)).count() > 0)
-                .max_by_key(|f| f.version.clone());
-            println!("{:?}", latest_result);
+            let latest_result = results
+                .into_iter()
+                .filter(|f| f.files.iter().filter(|x| regex.is_match(&x.name)).count() > 0)
+                .max_by_key(|f| f.version.clone()).unwrap();
+
+            // Find the matching file in here
+            let latest_file = latest_result.files.into_iter()
+                .filter(|x| regex.is_match(&x.name))
+                .next().unwrap();
+
+            println!("{:?}", latest_file);
         }
     }
 

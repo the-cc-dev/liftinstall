@@ -1,5 +1,4 @@
 /// Serves static files from a asset directory.
-
 extern crate mime_guess;
 
 use std::borrow::Cow;

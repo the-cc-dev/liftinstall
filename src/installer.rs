@@ -67,12 +67,16 @@ impl InstallerFramework {
             let latest_result = results
                 .into_iter()
                 .filter(|f| f.files.iter().filter(|x| regex.is_match(&x.name)).count() > 0)
-                .max_by_key(|f| f.version.clone()).unwrap();
+                .max_by_key(|f| f.version.clone())
+                .unwrap();
 
             // Find the matching file in here
-            let latest_file = latest_result.files.into_iter()
+            let latest_file = latest_result
+                .files
+                .into_iter()
                 .filter(|x| regex.is_match(&x.name))
-                .next().unwrap();
+                .next()
+                .unwrap();
 
             println!("{:?}", latest_file);
         }

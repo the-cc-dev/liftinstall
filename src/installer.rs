@@ -10,9 +10,15 @@ use std::env::consts::OS;
 
 use std::path::PathBuf;
 
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::sync::mpsc::Sender;
 
 use config::Config;
+
+use http::stream_file;
+
+use number_prefix::{decimal_prefix, Standalone, Prefixed};
 
 /// A message thrown during the installation of packages.
 #[derive(Serialize)]
@@ -26,6 +32,10 @@ pub enum InstallMessage {
 /// etc.
 pub struct InstallerFramework {
     config: Config,
+}
+
+struct DownloadProgress {
+    downloaded: usize
 }
 
 impl InstallerFramework {
@@ -124,7 +134,47 @@ impl InstallerFramework {
 
             println!("{:?}", latest_file);
 
-            // TODO: Download found file
+            // Download this file
+            let lock = Arc::new(Mutex::new(DownloadProgress {
+                downloaded: 0
+            }));
+
+            stream_file(latest_file.url, |data, size| {
+                let mut reference = lock.lock().unwrap();
+                reference.downloaded += data.len();
+
+                let base_percentage = base_package_percentage + base_package_range * 0.50;
+                let range_percentage = base_package_range / 2.0;
+
+                let global_percentage = if size == 0 {
+                    base_percentage
+                } else {
+                    let download_percentage = (reference.downloaded as f64) / (size as f64);
+                    // Split up the bar for this download in half (for metadata download + parse), then
+                    // add on our current percentage
+                    base_percentage + range_percentage * download_percentage
+                };
+
+                // Pretty print data volumes
+                let pretty_current = match decimal_prefix(reference.downloaded as f64) {
+                    Standalone(bytes)   => format!("{} bytes", bytes),
+                    Prefixed(prefix, n) => format!("{:.0} {}B", n, prefix),
+                };
+                let pretty_total = match decimal_prefix(size as f64) {
+                    Standalone(bytes)   => format!("{} bytes", bytes),
+                    Prefixed(prefix, n) => format!("{:.0} {}B", n, prefix),
+                };
+
+                messages
+                    .send(InstallMessage::Status(
+                        format!("Downloading {} ({} of {})", package.name, pretty_current,
+                                pretty_total),
+                        global_percentage,
+                    ))
+                    .unwrap();
+            })?;
+
+            println!("File downloaded successfully");
 
             count += 1.0;
         }

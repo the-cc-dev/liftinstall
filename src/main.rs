@@ -7,6 +7,9 @@ extern crate hyper;
 extern crate hyper_tls;
 extern crate tokio_core;
 
+extern crate reqwest;
+extern crate number_prefix;
+
 extern crate includedir;
 extern crate phf;
 
@@ -24,6 +27,7 @@ mod rest;
 mod config;
 mod installer;
 mod sources;
+mod http;
 
 use web_view::*;
 

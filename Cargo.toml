@@ -13,6 +13,9 @@ futures = "*"
 mime_guess = "1.8.3"
 url = "*"
 
+reqwest = "0.8.4"
+number_prefix = "0.2.7"
+
 includedir = "0.2.2"
 phf = "0.7.21"
 

@@ -43,6 +43,7 @@ pub struct InstallerFramework {
     config: Config,
 }
 
+/// Used to track the amount of data that has been downloaded during a HTTP request.
 struct DownloadProgress {
     downloaded: usize,
 }

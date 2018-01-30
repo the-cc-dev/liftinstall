@@ -22,6 +22,8 @@ extern crate toml;
 extern crate regex;
 extern crate semver;
 
+extern crate zip;
+
 mod assets;
 mod rest;
 mod config;

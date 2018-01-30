@@ -4,14 +4,22 @@
 
 use regex::Regex;
 
+use zip::ZipArchive;
+
+use number_prefix::{decimal_prefix, Prefixed, Standalone};
+
 use std::fs::create_dir_all;
 use std::fs::read_dir;
+use std::fs::File;
 
 use std::env::home_dir;
 use std::env::var;
 use std::env::consts::OS;
 
 use std::path::PathBuf;
+
+use std::io::Cursor;
+use std::io::copy;
 
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -20,8 +28,6 @@ use std::sync::mpsc::Sender;
 use config::Config;
 
 use http::stream_file;
-
-use number_prefix::{decimal_prefix, Prefixed, Standalone};
 
 /// A message thrown during the installation of packages.
 #[derive(Serialize)]
@@ -85,7 +91,7 @@ impl InstallerFramework {
         }
 
         // Make sure it is empty
-        let paths = match read_dir(path) {
+        let paths = match read_dir(&path) {
             Ok(v) => v,
             Err(v) => return Err(format!("Failed to read install destination: {:?}", v)),
         };
@@ -115,22 +121,24 @@ impl InstallerFramework {
 
             println!("Installing {}", package.name);
 
+            // 10%: polling
             messages
                 .send(InstallMessage::Status(
                     format!(
                         "Polling {} for latest version of {}",
                         package.source.name, package.name
                     ),
-                    base_package_percentage + base_package_range * 0.25,
+                    base_package_percentage + base_package_range * 0.10,
                 ))
                 .unwrap();
 
             let results = package.source.get_current_releases()?;
 
+            // 20%: waiting for parse/HTTP
             messages
                 .send(InstallMessage::Status(
                     format!("Resolving dependency for {}", package.name),
-                    base_package_percentage + base_package_range * 0.50,
+                    base_package_percentage + base_package_range * 0.20,
                 ))
                 .unwrap();
 
@@ -144,7 +152,7 @@ impl InstallerFramework {
             let latest_result = results
                 .into_iter()
                 .filter(|f| f.files.iter().filter(|x| regex.is_match(&x.name)).count() > 0)
-                .max_by_key(|f| f.version.clone());
+                .min_by_key(|f| f.version.clone());
 
             let latest_result = match latest_result {
                 Some(v) => v,
@@ -163,13 +171,20 @@ impl InstallerFramework {
 
             // Download this file
             let lock = Arc::new(Mutex::new(DownloadProgress { downloaded: 0 }));
+            let data_storage : Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(Vec::new()));
 
+            // 33-66%: downloading file
             stream_file(latest_file.url, |data, size| {
+                {
+                    let mut data_lock = data_storage.lock().unwrap();
+                    data_lock.extend_from_slice(&data);
+                }
+
                 let mut reference = lock.lock().unwrap();
                 reference.downloaded += data.len();
 
-                let base_percentage = base_package_percentage + base_package_range * 0.50;
-                let range_percentage = base_package_range / 2.0;
+                let base_percentage = base_package_percentage + base_package_range * 0.33;
+                let range_percentage = base_package_range / 3.0;
 
                 let global_percentage = if size == 0 {
                     base_percentage
@@ -202,6 +217,71 @@ impl InstallerFramework {
             })?;
 
             println!("File downloaded successfully");
+
+            // Extract this downloaded file
+            // TODO: Handle files other then zips
+            // TODO: Make database for uninstall
+            let data = data_storage.lock().unwrap();
+            let data_cursor = Cursor::new(data.as_slice());
+            let mut zip = match ZipArchive::new(data_cursor) {
+                Ok(v) => v,
+                Err(v) => return Err(format!("Unable to open .zip file: {:?}", v)),
+            };
+
+            let extract_base_percentage = base_package_percentage + base_package_range * 0.66;
+            let extract_range_percentage = base_package_range / 3.0;
+
+            let zip_size = zip.len();
+
+            for i in 0..zip_size {
+                let mut file = zip.by_index(i).unwrap();
+
+                let percentage = extract_base_percentage +
+                    extract_range_percentage / zip_size as f64 * i as f64;
+
+                messages
+                    .send(InstallMessage::Status(
+                        format!(
+                            "Extracting {} ({} of {})",
+                            file.name(), i + 1, zip_size
+                        ),
+                        percentage,
+                    ))
+                    .unwrap();
+
+                // Create target file
+                let target_path = path.join(file.name());
+                println!("target_path: {:?}", target_path);
+
+                // Check to make sure this isn't a directory
+                if file.name().ends_with("/") || file.name().ends_with("\\") {
+                    // Create this directory and move on
+                    match create_dir_all(target_path) {
+                        Ok(v) => v,
+                        Err(v) => return Err(format!("Unable to open file: {:?}", v)),
+                    }
+                    continue;
+                }
+
+                match target_path.parent() {
+                    Some(v) => match create_dir_all(v) {
+                        Ok(v) => v,
+                        Err(v) => return Err(format!("Unable to open file: {:?}", v)),
+                    },
+                    None => {},
+                }
+
+                let mut target_file = match File::create(target_path) {
+                    Ok(v) => v,
+                    Err(v) => return Err(format!("Unable to open file handle: {:?}", v)),
+                };
+
+                // Cross the streams
+                match copy(&mut file, &mut target_file) {
+                    Ok(v) => v,
+                    Err(v) => return Err(format!("Unable to open write file: {:?}", v)),
+                };
+            }
 
             count += 1.0;
         }

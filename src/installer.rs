@@ -4,6 +4,9 @@
 
 use regex::Regex;
 
+use std::fs::create_dir_all;
+use std::fs::read_dir;
+
 use std::env::home_dir;
 use std::env::var;
 use std::env::consts::OS;
@@ -62,10 +65,34 @@ impl InstallerFramework {
     pub fn install(
         &self,
         items: Vec<String>,
+        path: &str,
         messages: &Sender<InstallMessage>,
     ) -> Result<(), String> {
         // TODO: Error handling
-        println!("Framework: Installing {:?}", items);
+        println!("Framework: Installing {:?} to {}", items, path);
+
+        // Create our install directory
+        let path = PathBuf::from(path);
+        if !path.exists() {
+            match create_dir_all(&path) {
+                Ok(_) => {},
+                Err(v) => return Err(format!("Failed to create install directory: {:?}", v)),
+            }
+        }
+
+        if !path.is_dir() {
+            return Err(format!("Install destination is not a directory."));
+        }
+
+        // Make sure it is empty
+        let paths = match read_dir(path) {
+            Ok(v) => v,
+            Err(v) => return Err(format!("Failed to read install destination: {:?}", v)),
+        };
+
+        if paths.count() != 0 {
+            return Err(format!("Install destination is not empty."));
+        }
 
         // Resolve items in config
         let mut to_install = Vec::new();

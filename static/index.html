@@ -33,7 +33,15 @@
                         </h2>
                     </div>
 
-                    <div class="column" v-if="select_packages">
+                    <div class="column" v-if="has_error">
+                        <h4 class="subtitle">An error occurred:</h4>
+
+                        <pre><code>{{ error }}</code></pre>
+
+
+                        <a class="button is-primary is-pulled-right" v-on:click="back_to_packages">Back</a>
+                    </div>
+                    <div class="column" v-else-if="select_packages">
                         <h4 class="subtitle">Select your preferred settings:</h4>
 
                         <!-- Build options -->
@@ -108,7 +116,9 @@
                 is_installing : false,
                 is_finished : false,
                 progress : 0,
-                progress_message : ""
+                progress_message : "",
+                has_error : false,
+                error : ""
             },
             methods: {
                 "select_file": function() {
@@ -134,16 +144,28 @@
                     }
                     console.log(results);
 
+                    results["path"] = this.install_location;
+
                     stream_ajax("/api/start-install", function(line) {
                         console.log(line);
                         if (line.hasOwnProperty("Status")) {
                             app.progress_message = line.Status[0];
                             app.progress = line.Status[1] * 100;
                         }
+
+                        if (line.hasOwnProperty("Error")) {
+                            app.is_installing = false;
+                            app.has_error = true;
+                            app.error = line.Error;
+                        }
                     }, function(e) {
                         app.is_installing = false;
                         app.is_finished = true;
                     }, undefined, results);
+                },
+                "back_to_packages": function() {
+                    app.select_packages = true;
+                    app.has_error = false;
                 },
                 "exit": function() {
                     ajax("/api/exit", function() {});

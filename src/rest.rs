@@ -158,20 +158,29 @@ impl Service for WebService {
                         .collect::<HashMap<String, String>>();
 
                     let mut to_install = Vec::new();
+                    let mut path : Option<String> = None;
 
                     // Transform results into just an array of stuff to install
                     for (key, value) in results.iter() {
+                        if key == "path" {
+                            path = Some(value.to_owned());
+                            continue;
+                        }
+
                         if value == "true" {
                             to_install.push(key.to_owned());
                         }
                     }
+
+                    // The frontend always provides this
+                    let path = path.unwrap();
 
                     let (sender, receiver) = channel();
                     let (tx, rx) = hyper::Body::pair();
 
                     // Startup a thread to do this operation for us
                     thread::spawn(move || {
-                        match cloned_element.install(to_install, &sender) {
+                        match cloned_element.install(to_install, &path, &sender) {
                             Err(v) => sender.send(InstallMessage::Error(v)).unwrap(),
                             _ => {}
                         }

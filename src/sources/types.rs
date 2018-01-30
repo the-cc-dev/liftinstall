@@ -66,6 +66,8 @@ pub struct File {
     pub url: String,
 }
 
+impl File {}
+
 /// A individual release of an application.
 #[derive(Debug)]
 pub struct Release {

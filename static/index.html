@@ -74,6 +74,7 @@
                         <div v-html="config.general.installing_message"></div>
                         <br />
 
+                        <div v-html="progress_message"></div>
                         <progress class="progress is-info is-medium" v-bind:value="progress" max="100">
                             {{ progress }}%
                         </progress>
@@ -106,7 +107,8 @@
                 select_packages : true,
                 is_installing : false,
                 is_finished : false,
-                progress : 0
+                progress : 0,
+                progress_message : ""
             },
             methods: {
                 "select_file": function() {
@@ -132,15 +134,15 @@
                     }
                     console.log(results);
 
-                    ajax("/api/start-install", function(e) {
-                        // TODO: Remove fake loading
-                        setInterval(function() {
-                            app.progress += 5;
-                            if (app.progress >= 100) {
-                                app.is_installing = false;
-                                app.is_finished = true;
-                            }
-                        }, 100);
+                    stream_ajax("/api/start-install", function(line) {
+                        console.log(line);
+                        if (line.hasOwnProperty("Status")) {
+                            app.progress_message = line.Status[0];
+                            app.progress = line.Status[1] * 100;
+                        }
+                    }, function(e) {
+                        app.is_installing = false;
+                        app.is_finished = true;
                     }, undefined, results);
                 },
                 "exit": function() {

@@ -12,6 +12,7 @@ use serde_json;
 use futures::Stream;
 use futures::Future;
 use futures::future;
+use futures::Sink;
 
 use hyper::{self, Error as HyperError, Get, Post, StatusCode};
 use hyper::header::{ContentLength, ContentType};
@@ -29,6 +30,7 @@ use std::collections::HashMap;
 use assets;
 
 use installer::InstallerFramework;
+use installer::InstallMessage;
 
 #[derive(Serialize)]
 struct FileSelection {
@@ -164,17 +166,39 @@ impl Service for WebService {
                         }
                     }
 
+                    let (sender, receiver) = channel();
+                    let (tx, rx) = hyper::Body::pair();
+
                     // Startup a thread to do this operation for us
                     thread::spawn(move || {
-                        cloned_element.install(to_install);
+                        match cloned_element.install(to_install, &sender) {
+                            Err(v) => sender.send(InstallMessage::Error(v)).unwrap(),
+                            _ => {}
+                        }
+                        sender.send(InstallMessage::EOF).unwrap();
                     });
 
-                    let file = serde_json::to_string(&{}).unwrap();
+                    // Spawn a thread for transforming messages to chunk messages
+                    thread::spawn(move || {
+                        let mut tx = tx;
+                        loop {
+                            let response = receiver.recv().unwrap();
+
+                            match &response {
+                                &InstallMessage::EOF => break,
+                                _ => {}
+                            }
+
+                            let mut response = serde_json::to_string(&response).unwrap();
+                            response.push('\n');
+                            tx = tx.send(Ok(response.into_bytes().into())).wait().unwrap();
+                        }
+                    });
 
                     Response::<hyper::Body>::new()
-                        .with_header(ContentLength(file.len() as u64))
-                        .with_header(ContentType::json())
-                        .with_body(file)
+                        //.with_header(ContentLength(file.len() as u64))
+                        .with_header(ContentType::plaintext())
+                        .with_body(rx)
                 }));
             }
 

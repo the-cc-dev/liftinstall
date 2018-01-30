@@ -166,6 +166,8 @@
                 "back_to_packages": function() {
                     app.select_packages = true;
                     app.has_error = false;
+                    app.is_installing = false;
+                    app.is_finished = false;
                 },
                 "exit": function() {
                     ajax("/api/exit", function() {});

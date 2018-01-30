@@ -7,8 +7,8 @@ extern crate hyper;
 extern crate hyper_tls;
 extern crate tokio_core;
 
-extern crate reqwest;
 extern crate number_prefix;
+extern crate reqwest;
 
 extern crate includedir;
 extern crate phf;

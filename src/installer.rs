@@ -18,7 +18,7 @@ use config::Config;
 
 use http::stream_file;
 
-use number_prefix::{decimal_prefix, Standalone, Prefixed};
+use number_prefix::{decimal_prefix, Prefixed, Standalone};
 
 /// A message thrown during the installation of packages.
 #[derive(Serialize)]
@@ -35,7 +35,7 @@ pub struct InstallerFramework {
 }
 
 struct DownloadProgress {
-    downloaded: usize
+    downloaded: usize,
 }
 
 impl InstallerFramework {
@@ -135,9 +135,7 @@ impl InstallerFramework {
             println!("{:?}", latest_file);
 
             // Download this file
-            let lock = Arc::new(Mutex::new(DownloadProgress {
-                downloaded: 0
-            }));
+            let lock = Arc::new(Mutex::new(DownloadProgress { downloaded: 0 }));
 
             stream_file(latest_file.url, |data, size| {
                 let mut reference = lock.lock().unwrap();
@@ -157,18 +155,20 @@ impl InstallerFramework {
 
                 // Pretty print data volumes
                 let pretty_current = match decimal_prefix(reference.downloaded as f64) {
-                    Standalone(bytes)   => format!("{} bytes", bytes),
+                    Standalone(bytes) => format!("{} bytes", bytes),
                     Prefixed(prefix, n) => format!("{:.0} {}B", n, prefix),
                 };
                 let pretty_total = match decimal_prefix(size as f64) {
-                    Standalone(bytes)   => format!("{} bytes", bytes),
+                    Standalone(bytes) => format!("{} bytes", bytes),
                     Prefixed(prefix, n) => format!("{:.0} {}B", n, prefix),
                 };
 
                 messages
                     .send(InstallMessage::Status(
-                        format!("Downloading {} ({} of {})", package.name, pretty_current,
-                                pretty_total),
+                        format!(
+                            "Downloading {} ({} of {})",
+                            package.name, pretty_current, pretty_total
+                        ),
                         global_percentage,
                     ))
                     .unwrap();

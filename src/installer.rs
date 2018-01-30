@@ -14,6 +14,7 @@ use std::fs::File;
 
 use std::env::home_dir;
 use std::env::var;
+use std::env::current_exe;
 use std::env::consts::OS;
 
 use std::path::PathBuf;
@@ -82,7 +83,7 @@ impl InstallerFramework {
         let path = PathBuf::from(path);
         if !path.exists() {
             match create_dir_all(&path) {
-                Ok(_) => {},
+                Ok(_) => {}
                 Err(v) => return Err(format!("Failed to create install directory: {:?}", v)),
             }
         }
@@ -153,7 +154,7 @@ impl InstallerFramework {
             let latest_result = results
                 .into_iter()
                 .filter(|f| f.files.iter().filter(|x| regex.is_match(&x.name)).count() > 0)
-                .min_by_key(|f| f.version.clone());
+                .max_by_key(|f| f.version.clone());
 
             let latest_result = match latest_result {
                 Some(v) => v,
@@ -172,7 +173,7 @@ impl InstallerFramework {
 
             // Download this file
             let lock = Arc::new(Mutex::new(DownloadProgress { downloaded: 0 }));
-            let data_storage : Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(Vec::new()));
+            let data_storage: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(Vec::new()));
 
             // 33-66%: downloading file
             stream_file(latest_file.url, |data, size| {
@@ -237,15 +238,12 @@ impl InstallerFramework {
             for i in 0..zip_size {
                 let mut file = zip.by_index(i).unwrap();
 
-                let percentage = extract_base_percentage +
-                    extract_range_percentage / zip_size as f64 * i as f64;
+                let percentage =
+                    extract_base_percentage + extract_range_percentage / zip_size as f64 * i as f64;
 
                 messages
                     .send(InstallMessage::Status(
-                        format!(
-                            "Extracting {} ({} of {})",
-                            file.name(), i + 1, zip_size
-                        ),
+                        format!("Extracting {} ({} of {})", file.name(), i + 1, zip_size),
                         percentage,
                     ))
                     .unwrap();
@@ -269,7 +267,7 @@ impl InstallerFramework {
                         Ok(v) => v,
                         Err(v) => return Err(format!("Unable to open file: {:?}", v)),
                     },
-                    None => {},
+                    None => {}
                 }
 
                 let mut target_file = match File::create(target_path) {
@@ -286,6 +284,42 @@ impl InstallerFramework {
 
             count += 1.0;
         }
+
+        // Copy installer binary to target directory
+        messages
+            .send(InstallMessage::Status(
+                format!("Copying installer binary"),
+                0.99,
+            ))
+            .unwrap();
+
+        let current_app = match current_exe() {
+            Ok(v) => v,
+            Err(v) => return Err(format!("Unable to locate installer binary: {:?}", v)),
+        };
+
+        let mut current_app_file = match File::open(current_app) {
+            Ok(v) => v,
+            Err(v) => return Err(format!("Unable to open installer binary: {:?}", v)),
+        };
+
+        let platform_extension = if cfg!(windows) {
+            "maintenancetool.exe"
+        } else {
+            "maintenancetool"
+        };
+
+        let new_app = path.join(platform_extension);
+
+        let mut new_app_file = match File::create(new_app) {
+            Ok(v) => v,
+            Err(v) => return Err(format!("Unable to open installer binary: {:?}", v)),
+        };
+
+        match copy(&mut current_app_file, &mut new_app_file) {
+            Err(v) => return Err(format!("Unable to copy installer binary: {:?}", v)),
+            _ => {}
+        };
 
         Ok(())
     }

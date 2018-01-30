@@ -158,7 +158,7 @@ impl Service for WebService {
                         .collect::<HashMap<String, String>>();
 
                     let mut to_install = Vec::new();
-                    let mut path : Option<String> = None;
+                    let mut path: Option<String> = None;
 
                     // Transform results into just an array of stuff to install
                     for (key, value) in results.iter() {

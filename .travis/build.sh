@@ -8,5 +8,3 @@ curl https://sh.rustup.rs -sSf | sh -s -- -y
 export PATH=~/.cargo/bin:$PATH
 
 cargo build
-
-cp -r ~/.cargo/ ./.cargo/

@@ -1,5 +1,4 @@
 os: linux
-cache: cargo
 dist: trusty
 sudo: required
 services:
@@ -10,4 +9,3 @@ install:
 
 script:
  - docker run -v $(pwd):/liftinstall ubuntu:18.04 /bin/bash -ex /liftinstall/.travis/build.sh
- - cp -r .cargo/ ~/.cargo/

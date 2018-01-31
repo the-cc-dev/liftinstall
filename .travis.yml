@@ -1,9 +1,8 @@
-language: rust
-rust:
-  - stable
-cache: cargo
+services:
+  - docker
 
-addons:
-  apt:
-    packages:
-    - libwebkit2gtk-3.0-dev
+install:
+ - docker pull ubuntu:18.04
+
+build:
+ - docker run -v $(pwd):/liftinstall ubuntu:18.04 /bin/bash -ex /liftinstall/.travis/build.sh

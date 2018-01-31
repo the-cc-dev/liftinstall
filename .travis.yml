@@ -1,6 +1,5 @@
 os: linux
 dist: trusty
-language: cpp
 sudo: required
 services:
   - docker

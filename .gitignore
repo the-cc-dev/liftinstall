@@ -5,5 +5,4 @@
 **/*.rs.bk
 
 # User configuration files
-config.toml
 run.bat

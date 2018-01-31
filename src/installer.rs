@@ -6,6 +6,8 @@ use regex::Regex;
 
 use zip::ZipArchive;
 
+use serde_json;
+
 use number_prefix::{decimal_prefix, Prefixed, Standalone};
 
 use std::fs::create_dir_all;
@@ -21,6 +23,7 @@ use std::path::PathBuf;
 
 use std::io::Cursor;
 use std::io::copy;
+use std::io::Write;
 
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -29,6 +32,8 @@ use std::sync::mpsc::Sender;
 use config::Config;
 
 use http::stream_file;
+
+use sources::types::Version;
 
 /// A message thrown during the installation of packages.
 #[derive(Serialize)]
@@ -47,6 +52,14 @@ pub struct InstallerFramework {
 /// Used to track the amount of data that has been downloaded during a HTTP request.
 struct DownloadProgress {
     downloaded: usize,
+}
+
+/// Tracks the state of a local installation
+#[derive(Debug, Serialize, Deserialize)]
+struct LocalInstallation {
+    name: String,
+    version: Version,
+    files: Vec<String>,
 }
 
 impl InstallerFramework {
@@ -117,6 +130,8 @@ impl InstallerFramework {
         let mut count = 0.0 as f64;
         let max = to_install.len() as f64;
 
+        let mut installed_packages = Vec::new();
+
         for package in to_install.iter() {
             let base_package_percentage = count / max;
             let base_package_range = ((count + 1.0) / max) - base_package_percentage;
@@ -160,6 +175,8 @@ impl InstallerFramework {
                 Some(v) => v,
                 None => return Err(format!("No release with correct file found")),
             };
+
+            let latest_version = latest_result.version.clone();
 
             // Find the matching file in here
             let latest_file = latest_result
@@ -221,6 +238,8 @@ impl InstallerFramework {
             println!("File downloaded successfully");
 
             // Extract this downloaded file
+            let mut installed_files = Vec::new();
+
             // TODO: Handle files other then zips
             // TODO: Make database for uninstall
             let data = data_storage.lock().unwrap();
@@ -252,6 +271,8 @@ impl InstallerFramework {
                 let target_path = path.join(file.name());
                 println!("target_path: {:?}", target_path);
 
+                installed_files.push(file.name().to_owned());
+
                 // Check to make sure this isn't a directory
                 if file.name().ends_with("/") || file.name().ends_with("\\") {
                     // Create this directory and move on
@@ -278,11 +299,35 @@ impl InstallerFramework {
                 // Cross the streams
                 match copy(&mut file, &mut target_file) {
                     Ok(v) => v,
-                    Err(v) => return Err(format!("Unable to open write file: {:?}", v)),
+                    Err(v) => return Err(format!("Unable to write to file: {:?}", v)),
                 };
             }
 
+            // Save metadata about this package
+            installed_packages.push(LocalInstallation {
+                name: package.name.to_owned(),
+                version: latest_version,
+                files: installed_files,
+            });
+
             count += 1.0;
+        }
+
+        // Make copy of metadata
+        // TODO: Combine with already installed database, if needed
+        let metadata_compiled = serde_json::to_string(&installed_packages).unwrap();
+
+        {
+            let metadata_path = path.join("metadata.json");
+            let mut metadata_file = match File::create(metadata_path) {
+                Ok(v) => v,
+                Err(v) => return Err(format!("Unable to open file handle: {:?}", v)),
+            };
+
+            match metadata_file.write_all(metadata_compiled.as_bytes()) {
+                Ok(v) => v,
+                Err(v) => return Err(format!("Unable to write to file: {:?}", v)),
+            };
         }
 
         // Copy installer binary to target directory

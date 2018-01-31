@@ -1,7 +1,7 @@
 LiftInstall
 ===========
 
-A installer for your application. Designed to be customisable to the core, hookable from external
+An installer for your application. Designed to be customisable to the core, hookable from external
  applications, and have a decent UI.
 
 This is designed to be a more modern interpretation of Qt's Installer Framework, which has several issues:

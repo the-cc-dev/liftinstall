@@ -1,6 +1,10 @@
 LiftInstall
 ===========
 
+[![Build Status](https://travis-ci.org/j-selby/liftinstall.svg?branch=master)](https://travis-ci.org/j-selby/liftinstall)
+
+- Usage Documentation: https://liftinstall.jselby.net/
+
 An installer for your application. Designed to be customisable to the core, hookable from external
  applications, and have a decent UI.
 
@@ -18,6 +22,14 @@ Add your logo to `static/img/logo.png`, modify the configuration file, then run:
 ```bash
 cargo build
 ```
+
+LiftInstall should build on both Stable and Nightly Rust.
+
+Contributing
+------------
+
+PRs are very welcome. Code should be run through [Rustfmt](https://github.com/rust-lang-nursery/rustfmt) 
+ before submission.
 
 License
 -------

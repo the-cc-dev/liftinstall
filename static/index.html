@@ -57,7 +57,7 @@
                                 </a>
                             </p>
                             <p class="control">
-                                <a class="button is-danger" v-on:click="confirm_uninstall">
+                                <a class="button is-danger" v-on:click="prepare_uninstall">
                                     Uninstall
                                 </a>
                             </p>
@@ -211,7 +211,7 @@
                     app.is_installing = false;
                     app.is_finished = false;
                 },
-                "confirm_uninstall": function() {
+                "prepare_uninstall": function() {
                     app.confirm_uninstall = true;
                 },
                 "cancel_uninstall": function() {

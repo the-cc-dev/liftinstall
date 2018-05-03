@@ -74,7 +74,7 @@ fn main() {
 
     run(
         &format!("{} Installer", app_name),
-        &http_address,
+        Content::Url(http_address),
         Some(size),
         resizable,
         debug,

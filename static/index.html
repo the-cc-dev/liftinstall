@@ -36,7 +36,7 @@
                     <div class="column" v-if="has_error">
                         <h4 class="subtitle">An error occurred:</h4>
 
-                        <pre><code>{{ error }}</code></pre>
+                        <code>{{ error }}</code>
 
 
                         <a class="button is-primary is-pulled-right" v-on:click="back_to_packages">Back</a>
@@ -147,7 +147,6 @@
                     results["path"] = this.install_location;
 
                     stream_ajax("/api/start-install", function(line) {
-                        console.log(line);
                         if (line.hasOwnProperty("Status")) {
                             app.progress_message = line.Status[0];
                             app.progress = line.Status[1] * 100;

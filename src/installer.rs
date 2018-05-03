@@ -19,11 +19,11 @@ use std::env::var;
 use std::env::current_exe;
 use std::env::consts::OS;
 
+use std::path::Path;
 use std::path::PathBuf;
 
 use std::io::Cursor;
 use std::io::copy;
-use std::io::Write;
 
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -47,6 +47,9 @@ pub enum InstallMessage {
 /// etc.
 pub struct InstallerFramework {
     config: Config,
+    database: Vec<LocalInstallation>,
+    install_path: Option<String>,
+    preexisting_install: bool
 }
 
 /// Used to track the amount of data that has been downloaded during a HTTP request.
@@ -83,13 +86,21 @@ impl InstallerFramework {
     }
 
     /// Sends a request for something to be installed.
+    /// items: Array of named packages to be installed
+    /// messages: Channel used to send progress messages
+    /// fresh_install: If the install directory must be empty
     pub fn install(
-        &self,
+        &mut self,
         items: Vec<String>,
-        path: &str,
         messages: &Sender<InstallMessage>,
+        fresh_install: bool
     ) -> Result<(), String> {
-        // TODO: Error handling
+        // We have to have a install path for us to be able to do anything
+        let path = match self.install_path.clone() {
+            Some(v) => v,
+            None => return Err(format!("No install directory for installer"))
+        };
+
         println!("Framework: Installing {:?} to {}", items, path);
 
         // Create our install directory
@@ -106,13 +117,15 @@ impl InstallerFramework {
         }
 
         // Make sure it is empty
-        let paths = match read_dir(&path) {
-            Ok(v) => v,
-            Err(v) => return Err(format!("Failed to read install destination: {:?}", v)),
-        };
+        if fresh_install {
+            let paths = match read_dir(&path) {
+                Ok(v) => v,
+                Err(v) => return Err(format!("Failed to read install destination: {:?}", v)),
+            };
 
-        if paths.count() != 0 {
-            return Err(format!("Install destination is not empty."));
+            if paths.count() != 0 {
+                return Err(format!("Install destination is not empty."));
+            }
         }
 
         // Resolve items in config
@@ -126,11 +139,11 @@ impl InstallerFramework {
 
         println!("Resolved to {:?}", to_install);
 
+        // TODO: Uninstall pre-existing packages
+
         // Install packages
         let mut count = 0.0 as f64;
         let max = to_install.len() as f64;
-
-        let mut installed_packages = Vec::new();
 
         for package in to_install.iter() {
             let base_package_percentage = count / max;
@@ -164,6 +177,8 @@ impl InstallerFramework {
                 Ok(v) => v,
                 Err(v) => return Err(format!("An error occured while compiling regex: {:?}", v)),
             };
+
+            println!("Releases: {:?}", results);
 
             // Find the latest release in here
             let latest_result = results
@@ -304,7 +319,8 @@ impl InstallerFramework {
             }
 
             // Save metadata about this package
-            installed_packages.push(LocalInstallation {
+            // TODO: Check if this package already exists
+            self.database.push(LocalInstallation {
                 name: package.name.to_owned(),
                 version: latest_version,
                 files: installed_files,
@@ -313,22 +329,7 @@ impl InstallerFramework {
             count += 1.0;
         }
 
-        // Make copy of metadata
-        // TODO: Combine with already installed database, if needed
-        let metadata_compiled = serde_json::to_string(&installed_packages).unwrap();
-
-        {
-            let metadata_path = path.join("metadata.json");
-            let mut metadata_file = match File::create(metadata_path) {
-                Ok(v) => v,
-                Err(v) => return Err(format!("Unable to open file handle: {:?}", v)),
-            };
-
-            match metadata_file.write_all(metadata_compiled.as_bytes()) {
-                Ok(v) => v,
-                Err(v) => return Err(format!("Unable to write to file: {:?}", v)),
-            };
-        }
+        self.save_database()?;
 
         // Copy installer binary to target directory
         messages
@@ -369,8 +370,63 @@ impl InstallerFramework {
         Ok(())
     }
 
+    /// Saves the applications database.
+    pub fn save_database(&self) -> Result<(), String> {
+        // We have to have a install path for us to be able to do anything
+        let path = match self.install_path.clone() {
+            Some(v) => v,
+            None => return Err(format!("No install directory for installer"))
+        };
+
+        let metadata_path = Path::new(&path).join("metadata.json");
+        let metadata_file = match File::create(metadata_path) {
+            Ok(v) => v,
+            Err(v) => return Err(format!("Unable to open file handle: {:?}", v)),
+        };
+
+        match serde_json::to_writer(metadata_file, &self.database) {
+            Ok(v) => v,
+            Err(v) => return Err(format!("Unable to write to file: {:?}", v)),
+        };
+
+        Ok(())
+    }
+
+    /// Configures this installer to install to the specified location.
+    /// If there was a currently configured install path, this will be left as-is.
+    pub fn set_install_dir(&mut self, dir : &str) {
+        self.install_path = Some(dir.to_owned());
+    }
+
     /// Creates a new instance of the Installer Framework with a specified Config.
     pub fn new(config: Config) -> Self {
-        InstallerFramework { config }
+        InstallerFramework {
+            config,
+            database : Vec::new(),
+            install_path : None,
+            preexisting_install : false
+        }
+    }
+
+    /// Creates a new instance of the Installer Framework with a specified Config, managing
+    /// a pre-existing installation.
+    pub fn new_with_db(config: Config, install_path : String) -> Result<Self, String> {
+        let metadata_path = Path::new(&install_path).join("metadata.json");
+        let metadata_file = match File::open(metadata_path) {
+            Ok(v) => v,
+            Err(v) => return Err(format!("Unable to open file handle: {:?}", v)),
+        };
+
+        let database : Vec<LocalInstallation> = match serde_json::from_reader(metadata_file) {
+            Ok(v) => v,
+            Err(v) => return Err(format!("Unable to read metadata file: {:?}", v)),
+        };
+
+        Ok(InstallerFramework {
+            config,
+            database,
+            install_path : Some(install_path),
+            preexisting_install : true
+        })
     }
 }

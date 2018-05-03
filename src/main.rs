@@ -38,6 +38,7 @@ use config::Config;
 use installer::InstallerFramework;
 
 use rest::WebServer;
+use std::path::Path;
 
 // TODO: Fetch this over a HTTP request?
 static RAW_CONFIG: &'static str = include_str!("../config.toml");
@@ -47,7 +48,12 @@ fn main() {
 
     let app_name = config.general.name.clone();
 
-    let framework = InstallerFramework::new(config);
+    let metadata_file = Path::new("metadata.json");
+    let framework = if metadata_file.exists() {
+        InstallerFramework::new_with_db(config, format!("./")).unwrap()
+    } else {
+        InstallerFramework::new(config)
+    };
 
     let server = WebServer::new(framework).unwrap();
 

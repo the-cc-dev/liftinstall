@@ -84,6 +84,8 @@ function stream_ajax(path, callback, successCallback, failCallback, data) {
                     continue;
                 }
 
+                console.log("Incoming line: " + line);
+
                 var contents = JSON.parse(line);
                 callback(contents);
             }

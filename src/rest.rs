@@ -31,6 +31,7 @@ use assets;
 
 use installer::InstallerFramework;
 use installer::InstallMessage;
+use std::sync::RwLock;
 
 #[derive(Serialize)]
 struct FileSelection {
@@ -63,7 +64,7 @@ impl WebServer {
         let (sender, receiver) = channel();
 
         let handle = thread::spawn(move || {
-            let shared_framework = Arc::new(framework);
+            let shared_framework = Arc::new(RwLock::new(framework));
 
             let server = Http::new()
                 .bind(&addr, move || {
@@ -89,7 +90,7 @@ impl WebServer {
 
 /// Holds internal state for Hyper
 struct WebService {
-    framework: Arc<InstallerFramework>,
+    framework: Arc<RwLock<InstallerFramework>>,
 }
 
 impl Service for WebService {
@@ -104,9 +105,11 @@ impl Service for WebService {
             // This endpoint should be usable directly from a <script> tag during loading.
             // TODO: Handle errors
             (&Get, "/api/config") => {
+                let framework = self.framework.read().unwrap();
+
                 let file = enscapsulate_json(
                     "config",
-                    &self.framework.get_config().to_json_str().unwrap(),
+                    &framework.get_config().to_json_str().unwrap(),
                 );
 
                 Response::<hyper::Body>::new()
@@ -133,7 +136,8 @@ impl Service for WebService {
             }
             // Returns the default path for a installation
             (&Get, "/api/default-path") => {
-                let path = self.framework.get_default_path();
+                let framework = self.framework.read().unwrap();
+                let path = framework.get_default_path();
 
                 let response = FileSelection { path };
 
@@ -150,7 +154,7 @@ impl Service for WebService {
             }
             (&Post, "/api/start-install") => {
                 // We need to bit of pipelining to get this to work
-                let cloned_element = self.framework.clone();
+                let framework = self.framework.clone();
 
                 return Box::new(req.body().concat2().map(move |b| {
                     let results = form_urlencoded::parse(b.as_ref())
@@ -180,7 +184,11 @@ impl Service for WebService {
 
                     // Startup a thread to do this operation for us
                     thread::spawn(move || {
-                        match cloned_element.install(to_install, &path, &sender) {
+                        let mut framework = framework.write().unwrap();
+
+                        framework.set_install_dir(&path);
+
+                        match framework.install(to_install, &sender, true) {
                             Err(v) => sender.send(InstallMessage::Error(v)).unwrap(),
                             _ => {}
                         }

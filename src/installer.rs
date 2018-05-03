@@ -53,7 +53,7 @@ pub struct InstallerFramework {
     preexisting_install: bool
 }
 
-// Contains basic properties on the status of the session. Subset of InstallationFramework.
+/// Contains basic properties on the status of the session. Subset of InstallationFramework.
 #[derive(Serialize)]
 pub struct InstallationStatus {
     database: Vec<LocalInstallation>,

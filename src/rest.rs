@@ -32,7 +32,6 @@ use assets;
 
 use installer::InstallerFramework;
 use installer::InstallMessage;
-use installer::LocalInstallation;
 
 #[derive(Serialize)]
 struct FileSelection {

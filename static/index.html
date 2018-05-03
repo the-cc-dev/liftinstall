@@ -45,9 +45,23 @@
                     <div class="column" v-else-if="modify_install">
                         <h4 class="subtitle">Choose an option:</h4>
 
-                        <a class="button is-primary is-pulled-right" v-on:click="exit">Update</a>
-                        <a class="button is-primary is-pulled-right" v-on:click="exit">Modify</a>
-                        <a class="button is-primary is-pulled-right" v-on:click="exit">Uninstall</a>
+                        <div class="field is-grouped">
+                            <p class="control">
+                                <a class="button is-link" v-on:click="exit">
+                                    Update
+                                </a>
+                            </p>
+                            <p class="control">
+                                <a class="button" v-on:click="exit">
+                                    Modify
+                                </a>
+                            </p>
+                            <p class="control">
+                                <a class="button is-danger" v-on:click="confirm_uninstall">
+                                    Uninstall
+                                </a>
+                            </p>
+                        </div>
                     </div>
 
                     <div class="column" v-else-if="select_packages">
@@ -110,6 +124,19 @@
                 </div>
             </div>
         </section>
+
+        <div class="modal is-active" v-if="confirm_uninstall">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Are you sure you want to uninstall {{ config.general.name }}?</p>
+                </header>
+                <footer class="modal-card-foot">
+                    <button class="button is-danger">Yes</button>
+                    <button class="button" v-on:click="cancel_uninstall">No</button>
+                </footer>
+            </div>
+        </div>
     </div>
 
     <script src="/api/config"></script>
@@ -125,6 +152,7 @@
                 select_packages : true,
                 is_installing : false,
                 is_finished : false,
+                confirm_uninstall : false,
                 progress : 0,
                 progress_message : "",
                 has_error : false,
@@ -182,6 +210,12 @@
                     app.has_error = false;
                     app.is_installing = false;
                     app.is_finished = false;
+                },
+                "confirm_uninstall": function() {
+                    app.confirm_uninstall = true;
+                },
+                "cancel_uninstall": function() {
+                    app.confirm_uninstall = false;
                 },
                 "exit": function() {
                     ajax("/api/exit", function() {});

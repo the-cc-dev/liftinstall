@@ -19,8 +19,8 @@ url = "*"
 reqwest = "0.8.4"
 number_prefix = "0.2.7"
 
-includedir = {git = "https://github.com/j-selby/includedir.git", rev="4e25ad8"}
-phf = "0.7.21"
+rust-embed = "1.1.1"
+log = "*" # Used by rust-embed's macros
 
 serde = "1.0.27"
 serde_derive = "1.0.27"
@@ -34,6 +34,3 @@ semver = {version = "0.9.0", features = ["serde"]}
 regex = "0.2"
 
 zip = "0.2.8"
-
-[build-dependencies]
-includedir_codegen = {git = "https://github.com/j-selby/includedir.git", rev="e6db212"}

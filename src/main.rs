@@ -1,4 +1,5 @@
 #![windows_subsystem = "windows"]
+#![feature(attr_literals)]
 
 extern crate web_view;
 
@@ -10,8 +11,10 @@ extern crate tokio_core;
 extern crate number_prefix;
 extern crate reqwest;
 
-extern crate includedir;
-extern crate phf;
+#[macro_use]
+extern crate rust_embed;
+#[macro_use]
+extern crate log;
 
 extern crate serde;
 #[macro_use]
@@ -38,7 +41,6 @@ use config::Config;
 use installer::InstallerFramework;
 
 use rest::WebServer;
-use std::path::Path;
 
 // TODO: Fetch this over a HTTP request?
 static RAW_CONFIG: &'static str = include_str!("../config.toml");

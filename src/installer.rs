@@ -34,6 +34,7 @@ use config::Config;
 use http::stream_file;
 
 use sources::types::Version;
+use std::fs::OpenOptions;
 
 /// A message thrown during the installation of packages.
 #[derive(Serialize)]
@@ -364,7 +365,18 @@ impl InstallerFramework {
 
         let new_app = path.join(platform_extension);
 
-        let mut new_app_file = match File::create(new_app) {
+        let mut file_metadata = OpenOptions::new();
+        file_metadata.write(true)
+            .create_new(true);
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+
+            file_metadata.mode(0o770);
+        }
+
+        let mut new_app_file = match file_metadata.open(new_app) {
             Ok(v) => v,
             Err(v) => return Err(format!("Unable to open installer binary: {:?}", v)),
         };

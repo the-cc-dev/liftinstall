@@ -9,35 +9,34 @@ use self::nfd::Response as NfdResponse;
 
 use serde_json;
 
-use futures::Stream;
-use futures::Future;
 use futures::future;
+use futures::Future;
 use futures::Sink;
+use futures::Stream;
 
-use hyper::{self, Error as HyperError, Get, Post, StatusCode};
 use hyper::header::{ContentLength, ContentType};
 use hyper::server::{Http, Request, Response, Service};
+use hyper::{self, Error as HyperError, Get, Post, StatusCode};
 
 use self::url::form_urlencoded;
 
+use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::thread::{self, JoinHandle};
 use std::process::exit;
+use std::sync::mpsc::channel;
 use std::sync::Arc;
 use std::sync::RwLock;
-use std::sync::mpsc::channel;
-use std::collections::HashMap;
+use std::thread::{self, JoinHandle};
 
 use assets;
 
-use installer::InstallerFramework;
 use installer::InstallMessage;
+use installer::InstallerFramework;
 
 #[derive(Serialize)]
 struct FileSelection {
     path: Option<String>,
 }
-
 
 /// Acts as a communication mechanism between the Hyper WebService and the rest of the
 /// application.
@@ -108,10 +107,8 @@ impl Service for WebService {
             (&Get, "/api/config") => {
                 let framework = self.framework.read().unwrap();
 
-                let file = enscapsulate_json(
-                    "config",
-                    &framework.get_config().to_json_str().unwrap(),
-                );
+                let file =
+                    enscapsulate_json("config", &framework.get_config().to_json_str().unwrap());
 
                 Response::<hyper::Body>::new()
                     .with_header(ContentLength(file.len() as u64))

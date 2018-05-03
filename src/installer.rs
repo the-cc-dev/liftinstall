@@ -1,7 +1,6 @@
 /// installer.rs
 ///
 /// Contains the main installer structure, as well as high-level means of controlling it.
-
 use regex::Regex;
 
 use zip::ZipArchive;
@@ -14,20 +13,20 @@ use std::fs::create_dir_all;
 use std::fs::read_dir;
 use std::fs::File;
 
+use std::env::consts::OS;
+use std::env::current_exe;
 use std::env::home_dir;
 use std::env::var;
-use std::env::current_exe;
-use std::env::consts::OS;
 
 use std::path::Path;
 use std::path::PathBuf;
 
-use std::io::Cursor;
 use std::io::copy;
+use std::io::Cursor;
 
+use std::sync::mpsc::Sender;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::sync::mpsc::Sender;
 
 use config::Config;
 
@@ -50,7 +49,7 @@ pub struct InstallerFramework {
     config: Config,
     database: Vec<LocalInstallation>,
     install_path: Option<PathBuf>,
-    preexisting_install: bool
+    preexisting_install: bool,
 }
 
 /// Contains basic properties on the status of the session. Subset of InstallationFramework.
@@ -58,7 +57,7 @@ pub struct InstallerFramework {
 pub struct InstallationStatus {
     database: Vec<LocalInstallation>,
     install_path: Option<String>,
-    preexisting_install: bool
+    preexisting_install: bool,
 }
 
 /// Used to track the amount of data that has been downloaded during a HTTP request.
@@ -102,12 +101,12 @@ impl InstallerFramework {
         &mut self,
         items: Vec<String>,
         messages: &Sender<InstallMessage>,
-        fresh_install: bool
+        fresh_install: bool,
     ) -> Result<(), String> {
         // We have to have a install path for us to be able to do anything
         let path = match self.install_path.clone() {
             Some(v) => v,
-            None => return Err(format!("No install directory for installer"))
+            None => return Err(format!("No install directory for installer")),
         };
 
         println!("Framework: Installing {:?} to {:?}", items, path);
@@ -366,8 +365,7 @@ impl InstallerFramework {
         let new_app = path.join(platform_extension);
 
         let mut file_metadata = OpenOptions::new();
-        file_metadata.write(true)
-            .create_new(true);
+        file_metadata.write(true).create_new(true);
 
         #[cfg(unix)]
         {
@@ -394,7 +392,7 @@ impl InstallerFramework {
         // We have to have a install path for us to be able to do anything
         let path = match self.install_path.clone() {
             Some(v) => v,
-            None => return Err(format!("No install directory for installer"))
+            None => return Err(format!("No install directory for installer")),
         };
 
         let metadata_path = path.join("metadata.json");
@@ -413,7 +411,7 @@ impl InstallerFramework {
 
     /// Configures this installer to install to the specified location.
     /// If there was a currently configured install path, this will be left as-is.
-    pub fn set_install_dir(&mut self, dir : &str) {
+    pub fn set_install_dir(&mut self, dir: &str) {
         self.install_path = Some(Path::new(dir).to_owned());
     }
 
@@ -423,9 +421,9 @@ impl InstallerFramework {
             database: self.database.clone(),
             install_path: match self.install_path.clone() {
                 Some(v) => Some(v.display().to_string()),
-                None => None
+                None => None,
             },
-            preexisting_install: self.preexisting_install
+            preexisting_install: self.preexisting_install,
         }
     }
 
@@ -433,15 +431,15 @@ impl InstallerFramework {
     pub fn new(config: Config) -> Self {
         InstallerFramework {
             config,
-            database : Vec::new(),
-            install_path : None,
-            preexisting_install : false
+            database: Vec::new(),
+            install_path: None,
+            preexisting_install: false,
         }
     }
 
     /// Creates a new instance of the Installer Framework with a specified Config, managing
     /// a pre-existing installation.
-    pub fn new_with_db(config: Config, install_path : &Path) -> Result<Self, String> {
+    pub fn new_with_db(config: Config, install_path: &Path) -> Result<Self, String> {
         let path = install_path.to_owned();
         let metadata_path = path.join("metadata.json");
         let metadata_file = match File::open(metadata_path) {
@@ -449,7 +447,7 @@ impl InstallerFramework {
             Err(v) => return Err(format!("Unable to open file handle: {:?}", v)),
         };
 
-        let database : Vec<LocalInstallation> = match serde_json::from_reader(metadata_file) {
+        let database: Vec<LocalInstallation> = match serde_json::from_reader(metadata_file) {
             Ok(v) => v,
             Err(v) => return Err(format!("Unable to read metadata file: {:?}", v)),
         };
@@ -457,8 +455,8 @@ impl InstallerFramework {
         Ok(InstallerFramework {
             config,
             database,
-            install_path : Some(path),
-            preexisting_install : true
+            install_path: Some(path),
+            preexisting_install: true,
         })
     }
 }

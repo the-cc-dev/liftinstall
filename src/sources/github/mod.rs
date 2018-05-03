@@ -1,14 +1,13 @@
 /// github/mod.rs
-
 use futures::{Future, Stream};
 
 use tokio_core::reactor::Core;
 
+use hyper::header::UserAgent;
 use hyper::Client;
-use hyper::Uri;
 use hyper::Method;
 use hyper::Request;
-use hyper::header::UserAgent;
+use hyper::Uri;
 
 use hyper_tls::HttpsConnector;
 

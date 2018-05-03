@@ -1,5 +1,7 @@
 #![windows_subsystem = "windows"]
-#![feature(attr_literals)]
+#![feature(extern_prelude)]
+#![feature(plugin)]
+#![plugin(phf_macros)]
 
 extern crate web_view;
 
@@ -11,10 +13,7 @@ extern crate tokio_core;
 extern crate number_prefix;
 extern crate reqwest;
 
-#[macro_use]
-extern crate rust_embed;
-#[macro_use]
-extern crate log;
+extern crate phf;
 
 extern crate serde;
 #[macro_use]
@@ -28,11 +27,11 @@ extern crate semver;
 extern crate zip;
 
 mod assets;
-mod rest;
 mod config;
-mod installer;
-mod sources;
 mod http;
+mod installer;
+mod rest;
+mod sources;
 
 use web_view::*;
 

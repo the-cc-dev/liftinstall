@@ -1,20 +1,20 @@
 /// config.rs
 ///
 /// Contains Config structures, as well as means of serialising them.
-
 use toml;
 use toml::de::Error as TomlError;
 
 use serde_json::{self, Error as SerdeError};
 
-use sources::types::Release;
 use sources::get_by_name;
+use sources::types::Release;
 
 /// Description of the source of a package.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct PackageSource {
     pub name: String,
-    #[serde(rename = "match")] pub match_regex: String,
+    #[serde(rename = "match")]
+    pub match_regex: String,
     pub config: toml::Value,
 }
 

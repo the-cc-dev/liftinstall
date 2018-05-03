@@ -1,7 +1,6 @@
 /// http.rs
 ///
 /// A simple wrapper around Hyper's HTTP client.
-
 use hyper::header::ContentLength;
 
 use reqwest;

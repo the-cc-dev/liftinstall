@@ -24,6 +24,7 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::thread::{self, JoinHandle};
 use std::process::exit;
 use std::sync::Arc;
+use std::sync::RwLock;
 use std::sync::mpsc::channel;
 use std::collections::HashMap;
 
@@ -31,12 +32,13 @@ use assets;
 
 use installer::InstallerFramework;
 use installer::InstallMessage;
-use std::sync::RwLock;
+use installer::LocalInstallation;
 
 #[derive(Serialize)]
 struct FileSelection {
     path: Option<String>,
 }
+
 
 /// Acts as a communication mechanism between the Hyper WebService and the rest of the
 /// application.
@@ -152,6 +154,20 @@ impl Service for WebService {
             (&Get, "/api/exit") => {
                 exit(0);
             }
+            // Gets properties such as if the application is in maintenance mode
+            (&Get, "/api/installation-status") => {
+                let framework = self.framework.read().unwrap();
+
+                let response = framework.get_installation_status();
+
+                let file = serde_json::to_string(&response).unwrap();
+
+                Response::<hyper::Body>::new()
+                    .with_header(ContentLength(file.len() as u64))
+                    .with_header(ContentType::json())
+                    .with_body(file)
+            }
+            // Streams the installation of a particular set of packages
             (&Post, "/api/start-install") => {
                 // We need to bit of pipelining to get this to work
                 let framework = self.framework.clone();

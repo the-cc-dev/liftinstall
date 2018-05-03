@@ -52,14 +52,22 @@ pub struct InstallerFramework {
     preexisting_install: bool
 }
 
+// Contains basic properties on the status of the session. Subset of InstallationFramework.
+#[derive(Serialize)]
+pub struct InstallationStatus {
+    database: Vec<LocalInstallation>,
+    install_path: Option<String>,
+    preexisting_install: bool
+}
+
 /// Used to track the amount of data that has been downloaded during a HTTP request.
 struct DownloadProgress {
     downloaded: usize,
 }
 
 /// Tracks the state of a local installation
-#[derive(Debug, Serialize, Deserialize)]
-struct LocalInstallation {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LocalInstallation {
     name: String,
     version: Version,
     files: Vec<String>,
@@ -396,6 +404,15 @@ impl InstallerFramework {
     /// If there was a currently configured install path, this will be left as-is.
     pub fn set_install_dir(&mut self, dir : &str) {
         self.install_path = Some(dir.to_owned());
+    }
+
+    /// Returns metadata on the current status of the installation.
+    pub fn get_installation_status(&self) -> InstallationStatus {
+        InstallationStatus {
+            database: self.database.clone(),
+            install_path: self.install_path.clone(),
+            preexisting_install: self.preexisting_install
+        }
     }
 
     /// Creates a new instance of the Installer Framework with a specified Config.

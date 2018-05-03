@@ -48,12 +48,17 @@ fn main() {
 
     let app_name = config.general.name.clone();
 
-    let metadata_file = Path::new("metadata.json");
+    let current_exe = std::env::current_exe().unwrap();
+    let current_path = current_exe.parent().unwrap();
+    let metadata_file = current_path.join("metadata.json");
+    println!("Attempting to open: {:?}", metadata_file);
     let framework = if metadata_file.exists() {
-        InstallerFramework::new_with_db(config, format!("./")).unwrap()
+        InstallerFramework::new_with_db(config, current_path).unwrap()
     } else {
         InstallerFramework::new(config)
     };
+
+    // blah 1
 
     let server = WebServer::new(framework).unwrap();
 

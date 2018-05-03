@@ -48,7 +48,7 @@ pub enum InstallMessage {
 pub struct InstallerFramework {
     config: Config,
     database: Vec<LocalInstallation>,
-    install_path: Option<String>,
+    install_path: Option<PathBuf>,
     preexisting_install: bool
 }
 
@@ -109,10 +109,9 @@ impl InstallerFramework {
             None => return Err(format!("No install directory for installer"))
         };
 
-        println!("Framework: Installing {:?} to {}", items, path);
+        println!("Framework: Installing {:?} to {:?}", items, path);
 
         // Create our install directory
-        let path = PathBuf::from(path);
         if !path.exists() {
             match create_dir_all(&path) {
                 Ok(_) => {}
@@ -386,7 +385,7 @@ impl InstallerFramework {
             None => return Err(format!("No install directory for installer"))
         };
 
-        let metadata_path = Path::new(&path).join("metadata.json");
+        let metadata_path = path.join("metadata.json");
         let metadata_file = match File::create(metadata_path) {
             Ok(v) => v,
             Err(v) => return Err(format!("Unable to open file handle: {:?}", v)),
@@ -403,14 +402,17 @@ impl InstallerFramework {
     /// Configures this installer to install to the specified location.
     /// If there was a currently configured install path, this will be left as-is.
     pub fn set_install_dir(&mut self, dir : &str) {
-        self.install_path = Some(dir.to_owned());
+        self.install_path = Some(Path::new(dir).to_owned());
     }
 
     /// Returns metadata on the current status of the installation.
     pub fn get_installation_status(&self) -> InstallationStatus {
         InstallationStatus {
             database: self.database.clone(),
-            install_path: self.install_path.clone(),
+            install_path: match self.install_path.clone() {
+                Some(v) => Some(v.display().to_string()),
+                None => None
+            },
             preexisting_install: self.preexisting_install
         }
     }
@@ -427,8 +429,9 @@ impl InstallerFramework {
 
     /// Creates a new instance of the Installer Framework with a specified Config, managing
     /// a pre-existing installation.
-    pub fn new_with_db(config: Config, install_path : String) -> Result<Self, String> {
-        let metadata_path = Path::new(&install_path).join("metadata.json");
+    pub fn new_with_db(config: Config, install_path : &Path) -> Result<Self, String> {
+        let path = install_path.to_owned();
+        let metadata_path = path.join("metadata.json");
         let metadata_file = match File::open(metadata_path) {
             Ok(v) => v,
             Err(v) => return Err(format!("Unable to open file handle: {:?}", v)),
@@ -442,7 +445,7 @@ impl InstallerFramework {
         Ok(InstallerFramework {
             config,
             database,
-            install_path : Some(install_path),
+            install_path : Some(path),
             preexisting_install : true
         })
     }

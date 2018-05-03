@@ -41,6 +41,15 @@
 
                         <a class="button is-primary is-pulled-right" v-on:click="back_to_packages">Back</a>
                     </div>
+
+                    <div class="column" v-else-if="modify_install">
+                        <h4 class="subtitle">Choose an option:</h4>
+
+                        <a class="button is-primary is-pulled-right" v-on:click="exit">Update</a>
+                        <a class="button is-primary is-pulled-right" v-on:click="exit">Modify</a>
+                        <a class="button is-primary is-pulled-right" v-on:click="exit">Uninstall</a>
+                    </div>
+
                     <div class="column" v-else-if="select_packages">
                         <h4 class="subtitle">Select your preferred settings:</h4>
 
@@ -112,13 +121,19 @@
             data: {
                 config : config,
                 install_location : "",
+                modify_install : false,
                 select_packages : true,
                 is_installing : false,
                 is_finished : false,
                 progress : 0,
                 progress_message : "",
                 has_error : false,
-                error : ""
+                error : "",
+                metadata : {
+                    database : [],
+                    install_path : "",
+                    preexisting_install : false
+                }
             },
             methods: {
                 "select_file": function() {
@@ -134,7 +149,7 @@
 
                     var results = {};
 
-                    console.log(this.config.packages);
+                    console.log("Packages: " + this.config.packages);
 
                     for (var package_index = 0; package_index < this.config.packages.length; package_index++) {
                         var current_package = this.config.packages[package_index];
@@ -142,7 +157,7 @@
                             results[current_package.name] = current_package.default;
                         }
                     }
-                    console.log(results);
+                    console.log("Results: " + results);
 
                     results["path"] = this.install_location;
 
@@ -174,9 +189,18 @@
             }
         });
 
-        ajax("/api/default-path", function(e) {
-            if (e.path != null) {
-                app.install_location = e.path;
+        ajax("/api/installation-status", function(e) {
+            app.metadata = e;
+            if (e.preexisting_install) {
+                app.modify_install = true;
+                app.select_packages = false;
+                app.install_location = e.install_path;
+            } else {
+                ajax("/api/default-path", function(e) {
+                    if (e.path != null) {
+                        app.install_location = e.path;
+                    }
+                });
             }
         });
     </script>

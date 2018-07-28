@@ -165,11 +165,12 @@
             },
             methods: {
                 "select_file": function() {
-                    ajax("/api/file-select", function(e) {
+                    window.external.invoke("select-install-dir");
+                    /*ajax("/api/file-select", function(e) {
                         if (e.path != null) {
                             app.install_location = e.path;
                         }
-                    });
+                    });*/
                 },
                 "install": function() {
                     this.select_packages = false;

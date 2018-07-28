@@ -1,17 +1,7 @@
 /// github/mod.rs
-use futures::{Future, Stream};
-
-use tokio_core::reactor::Core;
-
-use hyper::header::UserAgent;
-use hyper::Client;
-use hyper::Method;
-use hyper::Request;
-use hyper::Uri;
-
-use hyper_tls::HttpsConnector;
-
-use toml;
+use reqwest;
+use reqwest::header::UserAgent;
+use reqwest::StatusCode;
 
 use serde_json;
 
@@ -34,63 +24,34 @@ impl GithubReleases {
 impl ReleaseSource for GithubReleases {
     fn get_current_releases(&self, config: &TomlValue) -> Result<Vec<Release>, String> {
         // Reparse our Config as strongly typed
-        let config_string = match toml::to_string(config) {
+        let config : GithubConfig = match config.clone().try_into() {
             Ok(v) => v,
-            Err(v) => return Err(format!("Failed to convert config: {:?}", v)),
+            Err(v) => return Err(format!("Failed to parse release config: {:?}", v)),
         };
-
-        let config: GithubConfig = match toml::from_str(&config_string) {
-            Ok(v) => v,
-            Err(v) => return Err(format!("Failed to convert config: {:?}", v)),
-        };
-
-        let mut core = match Core::new() {
-            Ok(v) => v,
-            Err(v) => return Err(format!("Failed to init Tokio: {:?}", v)),
-        };
-
-        // Build the HTTP client up
-        let client = Client::configure()
-            .connector(match HttpsConnector::new(4, &core.handle()) {
-                Ok(v) => v,
-                Err(v) => return Err(format!("Failed to init https: {:?}", v)),
-            })
-            .build(&core.handle());
 
         let mut results: Vec<Release> = Vec::new();
-        let target_url: Uri =
-            match format!("https://api.github.com/repos/{}/releases", config.repo).parse() {
-                Ok(v) => v,
-                Err(v) => return Err(format!("Failed to generate target url: {:?}", v)),
-            };
 
-        let mut req = Request::new(Method::Get, target_url);
-        req.headers_mut()
-            .set(UserAgent::new("installer-rs (j-selby)"));
+        // Build the HTTP client up
+        let client = reqwest::Client::new();
+        let mut response = client.get(&format!("https://api.github.com/repos/{}/releases", config.repo))
+            .header(UserAgent::new("liftinstall (j-selby)"))
+            .send()
+            .map_err(|x| format!("Error while sending HTTP request: {:?}", x))?;
 
-        // Build our future
-        let future = client.request(req).and_then(|res| {
-            res.body().concat2().and_then(move |body| {
-                let raw_json: Result<serde_json::Value, String> =
-                    match serde_json::from_slice(&body) {
-                        Ok(v) => Ok(v),
-                        Err(v) => Err(format!("Failed to parse response: {:?}", v)),
-                    };
+        if response.status() != StatusCode::Ok {
+            return Err(format!("Bad status code: {:?}", response.status()));
+        }
 
-                Ok(raw_json)
-            })
-        });
+        let body = response.text()
+            .map_err(|x| format!("Failed to decode HTTP response body: {:?}", x))?;
 
-        // Unwrap the future's results
-        let result: serde_json::Value = match core.run(future) {
-            Ok(v) => v,
-            Err(v) => return Err(format!("Failed to fetch info: {:?}", v)),
-        }?;
+        let result: serde_json::Value = serde_json::from_str(&body)
+            .map_err(|x| format!("Failed to parse response: {:?}", x))?;
 
-        let result: &Vec<serde_json::Value> = match result.as_array() {
-            Some(v) => v,
-            None => return Err(format!("JSON payload not an array")),
-        };
+        let result: &Vec<serde_json::Value> =
+            result
+                .as_array()
+                .ok_or(format!("Response was not an array!"))?;
 
         // Parse JSON from server
         for entry in result.into_iter() {
@@ -126,8 +87,8 @@ impl ReleaseSource for GithubReleases {
                 };
 
                 files.push(File {
-                    name: string.to_owned(),
-                    url: url.to_owned(),
+                    name: string.to_string(),
+                    url: url.to_string(),
                 });
             }
 

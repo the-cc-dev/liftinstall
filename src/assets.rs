@@ -3,6 +3,8 @@ extern crate mime_guess;
 
 use assets::mime_guess::{get_mime_type, octet_stream};
 
+use phf;
+
 macro_rules! include_files_as_assets {
     ( $field_name:ident, $( $file_name:expr ),* ) => {
         static $field_name: phf::Map<&'static str, &'static [u8]> = phf_map!(

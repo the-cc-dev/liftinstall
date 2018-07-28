@@ -1,14 +1,11 @@
 #![windows_subsystem = "windows"]
-#![feature(extern_prelude)]
 #![feature(plugin)]
 #![plugin(phf_macros)]
 
 extern crate web_view;
 
-extern crate futures;
 extern crate hyper;
-extern crate hyper_tls;
-extern crate tokio_core;
+extern crate futures;
 
 extern crate number_prefix;
 extern crate reqwest;
@@ -79,7 +76,12 @@ fn main() {
         resizable,
         debug,
         |_| {},
-        |_, _, _| {},
+        |wv, msg, _| {
+            println!("Incoming payload: {:?}", msg);
+            if msg == "select-install-dir" {
+                wv.dialog(Dialog::ChooseDirectory, "Select a install directory...", "");
+            }
+        },
         (),
     );
 }

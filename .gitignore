@@ -3,6 +3,3 @@
 
 /target/
 **/*.rs.bk
-
-# User configuration files
-run.bat

@@ -14,6 +14,8 @@ pub enum Version {
     Integer(u64),
 }
 
+// All versions are needed, even if a source is disabled at compile-time.
+#[allow(dead_code)]
 impl Version {
     /// Coarses versions into semver versions. This will use a integer version as the major
     /// field if required.

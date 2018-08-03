@@ -43,23 +43,23 @@ fn main() {
 
     let app_name = config.general.name.clone();
 
+    println!("{} installer", app_name);
+
     let current_exe = std::env::current_exe().unwrap();
     let current_path = current_exe.parent().unwrap();
     let metadata_file = current_path.join("metadata.json");
-    println!("Attempting to open: {:?}", metadata_file);
     let framework = if metadata_file.exists() {
+        println!("Using pre-existing metadata file: {:?}", metadata_file);
         InstallerFramework::new_with_db(config, current_path).unwrap()
     } else {
+        println!("Starting fresh install");
         InstallerFramework::new(config)
     };
-
-    // blah 1
 
     let server = WebServer::new(framework).unwrap();
 
     // Startup HTTP server for handling the web view
     let http_address = format!("http://{}", server.get_addr());
-    println!("{}", http_address);
 
     // Init the web view
     let size = (1024, 550);

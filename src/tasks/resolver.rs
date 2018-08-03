@@ -57,8 +57,6 @@ impl Task for ResolvePackageTask {
             Err(v) => return Err(format!("An error occured while compiling regex: {:?}", v)),
         };
 
-        println!("Releases: {:?}", results);
-
         // Find the latest release in here
         let latest_result = results
             .into_iter()
@@ -80,7 +78,7 @@ impl Task for ResolvePackageTask {
             .next()
             .unwrap();
 
-        println!("{:?}", latest_file);
+        println!("Selected file: {:?}", latest_file);
 
         Ok(TaskParamType::File(latest_version, latest_file))
     }

@@ -5,6 +5,11 @@ authors = ["James <jselby@jselby.net>"]
 repository = "https://github.com/j-selby/liftinstall.git"
 documentation = "https://liftinstall.jselby.net"
 description = "An adaptable installer for your application."
+build = "build.rs"
+
+[package.metadata.winres]
+ProductName = "yuzu Installer"
+FileDescription = "An interactive installer for yuzu"
 
 [dependencies]
 web-view = {git = "https://github.com/Boscop/web-view.git", rev = "555f422d09cbb94e82a728d47e9e07ca91963f6e"}
@@ -31,3 +36,6 @@ zip = "0.2.8"
 [target.'cfg(windows)'.dependencies]
 # NFD is needed on Windows, as web-view doesn't work correctly here
 nfd = "0.0.4"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"

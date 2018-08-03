@@ -33,9 +33,9 @@ pub fn file_from_string(file_path: &str) -> Option<(String, &'static [u8])> {
     let contents = include_files_as_assets!(
         file_path,
         "/index.html",
+        "/favicon.ico",
         "/css/bulma.min.css",
         "/css/main.css",
-        "/img/logo.png",
         "/js/helpers.js",
         "/js/vue.min.js"
     )?;

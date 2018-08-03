@@ -17,7 +17,10 @@ This is designed to be a more modern interpretation of Qt's Installer Framework,
 Building
 --------
 
-Add your logo to `static/img/logo.png`, modify the configuration file, then run:
+- Add your favicon to `static/favicon.ico`
+- Modify the configuration file as needed
+- Tweak `package.metadata.winres` metadata in `Cargo.toml`
+- Run:
 
 ```bash
 cargo build --release

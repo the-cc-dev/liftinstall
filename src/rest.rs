@@ -2,10 +2,7 @@
 ///
 /// Provides a HTTP/REST server for both frontend<->backend communication, as well
 /// as talking to external applications.
-extern crate nfd;
 extern crate url;
-
-use self::nfd::Response as NfdResponse;
 
 use serde_json;
 
@@ -109,23 +106,6 @@ impl Service for WebService {
 
                 let file =
                     enscapsulate_json("config", &framework.get_config().to_json_str().unwrap());
-
-                Response::<hyper::Body>::new()
-                    .with_header(ContentLength(file.len() as u64))
-                    .with_header(ContentType::json())
-                    .with_body(file)
-            }
-            // Opens a file dialog and returns the path as a string
-            (&Get, "/api/file-select") => {
-                let file_dialog = nfd::open_pick_folder(None).unwrap();
-                let file = match file_dialog {
-                    NfdResponse::Okay(path) => Some(path),
-                    _ => None,
-                };
-
-                let response = FileSelection { path: file };
-
-                let file = serde_json::to_string(&response).unwrap();
 
                 Response::<hyper::Body>::new()
                     .with_header(ContentLength(file.len() as u64))

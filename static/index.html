@@ -143,6 +143,10 @@
     <script src="/js/helpers.js"></script>
     <script src="/js/vue.js"></script>
     <script>
+        function selectFileCallback(name) {
+            app.install_location = name;
+        }
+
         var app = new Vue({
             el: '#app',
             data: {
@@ -165,12 +169,11 @@
             },
             methods: {
                 "select_file": function() {
-                    window.external.invoke("select-install-dir");
-                    /*ajax("/api/file-select", function(e) {
-                        if (e.path != null) {
-                            app.install_location = e.path;
+                    window.external.invoke(JSON.stringify({
+                        SelectInstallDir: {
+                            callback_name: "selectFileCallback"
                         }
-                    });*/
+                    }));
                 },
                 "install": function() {
                     this.select_packages = false;

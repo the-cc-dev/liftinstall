@@ -1,5 +1,8 @@
 #![windows_subsystem = "windows"]
 
+#[cfg(windows)]
+extern crate nfd;
+
 extern crate web_view;
 
 extern crate futures;
@@ -33,10 +36,16 @@ use config::Config;
 
 use installer::InstallerFramework;
 
+use nfd::Response;
 use rest::WebServer;
 
 // TODO: Fetch this over a HTTP request?
 static RAW_CONFIG: &'static str = include_str!("../config.toml");
+
+#[derive(Deserialize, Debug)]
+enum CallbackType {
+    SelectInstallDir { callback_name: String },
+}
 
 fn main() {
     let config = Config::from_toml_str(RAW_CONFIG).unwrap();
@@ -74,9 +83,32 @@ fn main() {
         debug,
         |_| {},
         |wv, msg, _| {
-            println!("Incoming payload: {:?}", msg);
-            if msg == "select-install-dir" {
-                wv.dialog(Dialog::ChooseDirectory, "Select a install directory...", "");
+            let command: CallbackType =
+                serde_json::from_str(msg).expect(&format!("Unable to parse string: {:?}", msg));
+
+            println!("Incoming payload: {:?}", command);
+
+            match command {
+                CallbackType::SelectInstallDir { callback_name } => {
+                    #[cfg(windows)]
+                    let result =
+                        match nfd::open_pick_folder(None).expect("Unable to open folder dialog") {
+                            Response::Okay(v) => v,
+                            _ => return,
+                        };
+
+                    #[cfg(not(windows))]
+                    let result =
+                        wv.dialog(Dialog::ChooseDirectory, "Select a install directory...", "");
+
+                    if result.len() > 0 {
+                        let result =
+                            serde_json::to_string(&result).expect("Unable to serialize response");
+                        let command = format!("{}({});", callback_name, result);
+                        println!("Injecting response: {}", command);
+                        wv.eval(&command);
+                    }
+                }
             }
         },
         (),

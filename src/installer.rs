@@ -1,7 +1,6 @@
 /// installer.rs
 ///
 /// Contains the main installer structure, as well as high-level means of controlling it.
-
 use serde_json;
 
 use std::fs::File;

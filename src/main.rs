@@ -3,7 +3,7 @@
 //! The main entrypoint for the application. Orchestrates the building of the installation
 //! framework, and opens necessary HTTP servers/frontends.
 
-//#![windows_subsystem = "windows"]
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 #[cfg(windows)]
 extern crate nfd;

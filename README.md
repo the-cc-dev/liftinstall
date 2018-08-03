@@ -20,10 +20,10 @@ Building
 Add your logo to `static/img/logo.png`, modify the configuration file, then run:
 
 ```bash
-cargo build
+cargo build --release
 ```
 
-LiftInstall should build on both ~~Stable and~~ Nightly Rust.
+LiftInstall should build on both Stable and Nightly Rust.
 
 Contributing
 ------------

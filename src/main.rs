@@ -1,16 +1,12 @@
 #![windows_subsystem = "windows"]
-#![feature(plugin)]
-#![plugin(phf_macros)]
 
 extern crate web_view;
 
-extern crate hyper;
 extern crate futures;
+extern crate hyper;
 
 extern crate number_prefix;
 extern crate reqwest;
-
-extern crate phf;
 
 extern crate serde;
 #[macro_use]
@@ -29,6 +25,7 @@ mod http;
 mod installer;
 mod rest;
 mod sources;
+mod tasks;
 
 use web_view::*;
 

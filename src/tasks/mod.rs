@@ -16,6 +16,7 @@ pub mod install_pkg;
 pub mod resolver;
 pub mod save_database;
 pub mod save_executable;
+pub mod uninstall;
 pub mod uninstall_pkg;
 
 /// An abstraction over the various paramaters that can be passed around.

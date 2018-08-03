@@ -127,7 +127,7 @@
                     <p class="modal-card-title">Are you sure you want to uninstall {{ config.general.name }}?</p>
                 </header>
                 <footer class="modal-card-foot">
-                    <button class="button is-danger">Yes</button>
+                    <button class="button is-danger" v-on:click="uninstall">Yes</button>
                     <button class="button" v-on:click="cancel_uninstall">No</button>
                 </footer>
             </div>
@@ -215,6 +215,27 @@
                 },
                 "cancel_uninstall": function() {
                     app.confirm_uninstall = false;
+                },
+                "uninstall": function() {
+                    app.confirm_uninstall = false;
+                    this.select_packages = false;
+                    this.is_installing = true;
+
+                    stream_ajax("/api/uninstall", function(line) {
+                        if (line.hasOwnProperty("Status")) {
+                            app.progress_message = line.Status[0];
+                            app.progress = line.Status[1] * 100;
+                        }
+
+                        if (line.hasOwnProperty("Error")) {
+                            app.is_installing = false;
+                            app.has_error = true;
+                            app.error = line.Error;
+                        }
+                    }, function(e) {
+                        app.is_installing = false;
+                        app.is_finished = true;
+                    }, undefined, {});
                 },
                 "exit": function() {
                     ajax("/api/exit", function() {});

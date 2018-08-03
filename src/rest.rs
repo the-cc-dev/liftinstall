@@ -143,6 +143,49 @@ impl Service for WebService {
                     .with_body(file)
             }
             // Streams the installation of a particular set of packages
+            (&Post, "/api/uninstall") => {
+                // We need to bit of pipelining to get this to work
+                let framework = self.framework.clone();
+
+                return Box::new(req.body().concat2().map(move |_b| {
+                    let (sender, receiver) = channel();
+                    let (tx, rx) = hyper::Body::pair();
+
+                    // Startup a thread to do this operation for us
+                    thread::spawn(move || {
+                        let mut framework = framework.write().unwrap();
+
+                        match framework.uninstall(&sender) {
+                            Err(v) => sender.send(InstallMessage::Error(v)).unwrap(),
+                            _ => {}
+                        }
+                        sender.send(InstallMessage::EOF).unwrap();
+                    });
+
+                    // Spawn a thread for transforming messages to chunk messages
+                    thread::spawn(move || {
+                        let mut tx = tx;
+                        loop {
+                            let response = receiver.recv().unwrap();
+
+                            match &response {
+                                &InstallMessage::EOF => break,
+                                _ => {}
+                            }
+
+                            let mut response = serde_json::to_string(&response).unwrap();
+                            response.push('\n');
+                            tx = tx.send(Ok(response.into_bytes().into())).wait().unwrap();
+                        }
+                    });
+
+                    Response::<hyper::Body>::new()
+                        //.with_header(ContentLength(file.len() as u64))
+                        .with_header(ContentType::plaintext())
+                        .with_body(rx)
+                }));
+            }
+            // Streams the installation of a particular set of packages
             (&Post, "/api/start-install") => {
                 // We need to bit of pipelining to get this to work
                 let framework = self.framework.clone();

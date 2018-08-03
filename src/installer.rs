@@ -19,6 +19,7 @@ use config::Config;
 use sources::types::Version;
 
 use tasks::install::InstallTask;
+use tasks::uninstall::UninstallTask;
 use tasks::DependencyTree;
 
 /// A message thrown during the installation of packages.
@@ -75,7 +76,7 @@ impl InstallerFramework {
     }
 
     /// Sends a request for something to be installed.
-    /// items: Array of named packages to be installed
+    /// items: Array of named packages to be installed/kept
     /// messages: Channel used to send progress messages
     /// fresh_install: If the install directory must be empty
     pub fn install(
@@ -96,6 +97,26 @@ impl InstallerFramework {
             items,
             fresh_install,
         });
+
+        let mut tree = DependencyTree::build(task);
+
+        println!("Dependency tree:\n{}", tree);
+
+        tree.execute(self, &|msg: &str, progress: f32| match messages
+            .send(InstallMessage::Status(msg.to_string(), progress as _))
+        {
+            Err(v) => eprintln!("Failed to submit queue message: {:?}", v),
+            _ => {}
+        }).map(|_x| ())
+    }
+
+    /// Sends a request for everything to be uninstalled.
+    pub fn uninstall(&mut self, messages: &Sender<InstallMessage>) -> Result<(), String> {
+        // TODO: Cleanup maintenance tool
+
+        let items: Vec<String> = self.database.iter().map(|x| x.name.clone()).collect();
+
+        let task = Box::new(UninstallTask { items });
 
         let mut tree = DependencyTree::build(task);
 

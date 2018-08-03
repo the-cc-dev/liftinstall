@@ -47,6 +47,11 @@ use nfd::Response;
 
 use rest::WebServer;
 
+use std::net::ToSocketAddrs;
+
+use std::sync::Arc;
+use std::sync::RwLock;
+
 // TODO: Fetch this over a HTTP request?
 static RAW_CONFIG: &'static str = include_str!("../config.toml");
 
@@ -73,11 +78,33 @@ fn main() {
         InstallerFramework::new(config)
     };
 
-    let server = WebServer::new(framework).unwrap();
+    let addresses = "localhost:0"
+        .to_socket_addrs()
+        .expect("No localhost address found");
+
+    let mut servers = Vec::new();
+    let mut http_address = None;
+
+    let framework = Arc::new(RwLock::new(framework));
 
     // Startup HTTP server for handling the web view
-    let http_address = format!("http://{}", server.get_addr());
-    println!("Server: {:?}", http_address);
+    for address in addresses {
+        let server = WebServer::with_addr(framework.clone(), address).unwrap();
+
+        let addr = server.get_addr();
+        println!("Server: {:?}", addr);
+
+        http_address = Some(addr);
+
+        servers.push(server);
+    }
+
+    let http_address = match http_address {
+        Some(v) => v,
+        None => panic!("No HTTP address found"),
+    };
+
+    let http_address = format!("http://localhost:{}", http_address.port());
 
     // Init the web view
     let size = (1024, 500);

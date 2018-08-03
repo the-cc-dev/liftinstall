@@ -27,7 +27,7 @@ pub enum TaskParamType {
     /// Downloaded contents of a file
     FileContents(Version, Vec<u8>),
     /// Tells the runtime to break parsing other dependencies
-    Break
+    Break,
 }
 
 /// A Task is a small, async task conforming to a fixed set of inputs/outputs.
@@ -103,7 +103,7 @@ impl DependencyTree {
             // Check to see if we skip matching other dependencies
             let do_break = match &result {
                 &TaskParamType::Break => true,
-                _ => false
+                _ => false,
             };
 
             inputs.push(result);

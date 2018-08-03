@@ -47,25 +47,15 @@ impl WebServer {
         self.addr.clone()
     }
 
-    /// Creates a new web server, bound to a random port on localhost.
-    pub fn new(framework: InstallerFramework) -> Result<Self, HyperError> {
-        WebServer::with_addr(
-            framework,
-            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0),
-        )
-    }
-
     /// Creates a new web server with the specified address.
-    pub fn with_addr(framework: InstallerFramework, addr: SocketAddr) -> Result<Self, HyperError> {
+    pub fn with_addr(framework: Arc<RwLock<InstallerFramework>>, addr: SocketAddr) -> Result<Self, HyperError> {
         let (sender, receiver) = channel();
 
         let handle = thread::spawn(move || {
-            let shared_framework = Arc::new(RwLock::new(framework));
-
             let server = Http::new()
                 .bind(&addr, move || {
                     Ok(WebService {
-                        framework: shared_framework.clone(),
+                        framework: framework.clone(),
                     })
                 })
                 .unwrap();

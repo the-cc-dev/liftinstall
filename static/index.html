@@ -225,9 +225,10 @@
                     app.modify_install = false;
                 },
                 "uninstall": function() {
+                    app.is_installing = true;
                     app.confirm_uninstall = false;
-                    this.select_packages = false;
-                    this.is_installing = true;
+                    app.modify_install = false;
+                    app.select_packages = false;
 
                     stream_ajax("/api/uninstall", function(line) {
                         if (line.hasOwnProperty("Status")) {

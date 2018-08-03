@@ -42,7 +42,9 @@ use config::Config;
 
 use installer::InstallerFramework;
 
+#[cfg(windows)]
 use nfd::Response;
+
 use rest::WebServer;
 
 // TODO: Fetch this over a HTTP request?

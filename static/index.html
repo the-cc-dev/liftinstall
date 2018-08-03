@@ -42,7 +42,7 @@
 
                         <div class="field is-grouped">
                             <p class="control">
-                                <a class="button is-link" v-on:click="exit">
+                                <a class="button is-link" v-on:click="install">
                                     Update
                                 </a>
                             </p>
@@ -175,8 +175,9 @@
                     }));
                 },
                 "install": function() {
-                    this.select_packages = false;
                     this.is_installing = true;
+                    this.modify_install = false;
+                    this.select_packages = false;
 
                     var results = {};
 
@@ -261,24 +262,24 @@
                 app.install_location = e.install_path;
 
                 // Copy over installed packages
-                for (var x = 0; x < config.length; x++) {
-                    config[x].default = false;
-                    config[x].installed = false;
+                for (var x = 0; x < app.config.packages.length; x++) {
+                    app.config.packages[x].default = false;
+                    app.config.packages[x].installed = false;
                 }
 
                 for (var i = 0; i < packages.length; i++) {
                     // Find this config package
-                    for (var x = 0; x < config.length; x++) {
-                        if (config[x].name === packages[i].name) {
-                            config[x].default = true;
-                            config[x].installed = true;
+                    for (var x = 0; x < app.config.packages.length; x++) {
+                        if (app.config.packages[x].name === packages[i].name) {
+                            app.config.packages[x].default = true;
+                            app.config.packages[x].installed = true;
                         }
                     }
                 }
 
             } else {
-                for (var x = 0; x < config.length; x++) {
-                    config[x].installed = false;
+                for (var x = 0; x < app.config.packages.length; x++) {
+                    app.config.packages[x].installed = false;
                 }
 
                 ajax("/api/default-path", function(e) {

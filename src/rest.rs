@@ -17,7 +17,7 @@ use hyper::{self, Error as HyperError, Get, Post, StatusCode};
 use url::form_urlencoded;
 
 use std::collections::HashMap;
-use std::net::{SocketAddr};
+use std::net::SocketAddr;
 use std::process::exit;
 use std::sync::mpsc::channel;
 use std::sync::Arc;

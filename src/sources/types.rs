@@ -1,6 +1,7 @@
-/// types.rs
-///
-/// Contains traits that should be implemented by sources, as well as corresponding types.
+//! types.rs
+//!
+//! Contains traits that should be implemented by sources, as well as corresponding types.
+
 use std::cmp::Ordering;
 
 pub use semver::Version as SemverVersion;

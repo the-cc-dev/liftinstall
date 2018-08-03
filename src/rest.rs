@@ -1,8 +1,7 @@
-/// rest.rs
-///
-/// Provides a HTTP/REST server for both frontend<->backend communication, as well
-/// as talking to external applications.
-extern crate url;
+//! rest.rs
+//!
+//! Provides a HTTP/REST server for both frontend<->backend communication, as well
+//! as talking to external applications.
 
 use serde_json;
 
@@ -15,7 +14,7 @@ use hyper::header::{ContentLength, ContentType};
 use hyper::server::{Http, Request, Response, Service};
 use hyper::{self, Error as HyperError, Get, Post, StatusCode};
 
-use self::url::form_urlencoded;
+use url::form_urlencoded;
 
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};

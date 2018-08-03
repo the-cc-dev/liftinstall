@@ -1,4 +1,7 @@
-/// github/mod.rs
+//! github/mod.rs
+//!
+//! Contains the Github API implementation of a release source.
+
 use reqwest;
 use reqwest::header::UserAgent;
 use reqwest::StatusCode;

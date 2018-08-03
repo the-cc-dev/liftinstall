@@ -1,4 +1,5 @@
-/// Serves static files from a asset directory.
+//! Serves static files from a asset directory.
+
 extern crate mime_guess;
 
 use assets::mime_guess::{get_mime_type, octet_stream};

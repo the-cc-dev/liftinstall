@@ -1,6 +1,7 @@
-/// config.rs
-///
-/// Contains Config structures, as well as means of serialising them.
+//! config.rs
+//!
+//! Contains Config structures, as well as means of serialising them.
+
 use toml;
 use toml::de::Error as TomlError;
 

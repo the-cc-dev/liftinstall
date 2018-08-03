@@ -8,10 +8,9 @@ use reqwest;
 use std::io::Read;
 
 /// Streams a file from a HTTP server.
-pub fn stream_file<F>(url: String, callback: F) -> Result<(), String>
-// |data : Vec<u8>, total : u64|
+pub fn stream_file<F>(url: String, mut callback: F) -> Result<(), String>
 where
-    F: Fn(Vec<u8>, u64) -> (),
+    F: FnMut(Vec<u8>, u64) -> (),
 {
     let mut client = match reqwest::get(&url) {
         Ok(v) => v,

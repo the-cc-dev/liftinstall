@@ -49,6 +49,7 @@ use rest::WebServer;
 
 use std::net::ToSocketAddrs;
 
+use std::net::TcpListener;
 use std::sync::Arc;
 use std::sync::RwLock;
 
@@ -78,6 +79,17 @@ fn main() {
         InstallerFramework::new(config)
     };
 
+    // Firstly, allocate us an epidermal port
+    let target_port = {
+        let listener =
+            TcpListener::bind("127.0.0.1:0").expect("At least one local address should be free");
+        listener
+            .local_addr()
+            .expect("Should be able to pull address from listener")
+            .port()
+    };
+
+    // Now, iterate over all ports
     let addresses = "localhost:0"
         .to_socket_addrs()
         .expect("No localhost address found");
@@ -88,7 +100,9 @@ fn main() {
     let framework = Arc::new(RwLock::new(framework));
 
     // Startup HTTP server for handling the web view
-    for address in addresses {
+    for mut address in addresses {
+        address.set_port(target_port);
+
         let server = WebServer::with_addr(framework.clone(), address).unwrap();
 
         let addr = server.get_addr();

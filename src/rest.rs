@@ -17,7 +17,7 @@ use hyper::{self, Error as HyperError, Get, Post, StatusCode};
 use url::form_urlencoded;
 
 use std::collections::HashMap;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::{SocketAddr};
 use std::process::exit;
 use std::sync::mpsc::channel;
 use std::sync::Arc;
@@ -48,7 +48,10 @@ impl WebServer {
     }
 
     /// Creates a new web server with the specified address.
-    pub fn with_addr(framework: Arc<RwLock<InstallerFramework>>, addr: SocketAddr) -> Result<Self, HyperError> {
+    pub fn with_addr(
+        framework: Arc<RwLock<InstallerFramework>>,
+        addr: SocketAddr,
+    ) -> Result<Self, HyperError> {
         let (sender, receiver) = channel();
 
         let handle = thread::spawn(move || {

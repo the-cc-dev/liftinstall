@@ -111,6 +111,21 @@ impl Service for WebService {
                     .with_header(ContentType::json())
                     .with_body(file)
             }
+            // This endpoint should be usable directly from a <script> tag during loading.
+            // TODO: Handle errors
+            (&Get, "/api/packages") => {
+                let framework = self.framework.read().unwrap();
+
+                let file = enscapsulate_json(
+                    "packages",
+                    &serde_json::to_string(&framework.database).unwrap(),
+                );
+
+                Response::<hyper::Body>::new()
+                    .with_header(ContentLength(file.len() as u64))
+                    .with_header(ContentType::json())
+                    .with_body(file)
+            }
             // Returns the default path for a installation
             (&Get, "/api/default-path") => {
                 let framework = self.framework.read().unwrap();
@@ -220,9 +235,12 @@ impl Service for WebService {
                     thread::spawn(move || {
                         let mut framework = framework.write().unwrap();
 
-                        framework.set_install_dir(&path);
+                        let new_install = !framework.preexisting_install;
+                        if new_install {
+                            framework.set_install_dir(&path);
+                        }
 
-                        match framework.install(to_install, &sender, true) {
+                        match framework.install(to_install, &sender, new_install) {
                             Err(v) => sender.send(InstallMessage::Error(v)).unwrap(),
                             _ => {}
                         }

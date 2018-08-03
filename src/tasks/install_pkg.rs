@@ -7,12 +7,15 @@ use tasks::TaskParamType;
 
 use config::PackageDescription;
 use installer::LocalInstallation;
+
 use std::fs::create_dir_all;
 use std::fs::File;
 use std::io::copy;
 use std::io::Cursor;
+
 use tasks::download_pkg::DownloadPackageTask;
 use tasks::uninstall_pkg::UninstallPackageTask;
+
 use zip::ZipArchive;
 
 pub struct InstallPackageTask {
@@ -73,28 +76,39 @@ impl Task for InstallPackageTask {
                 (i as f32) / (zip_size as f32),
             );
 
+            let filename = file.name().replace("\\", "/");
+
+            // Ensure that parent directories exist
+            let mut parent_dir = &filename[..];
+            while let Some(v) = parent_dir.rfind("/") {
+                parent_dir = &parent_dir[0..v + 1];
+
+                if !installed_files.contains(&parent_dir.to_string()) {
+                    installed_files.push(parent_dir.to_string());
+                }
+
+                match create_dir_all(path.join(&parent_dir)) {
+                    Ok(v) => v,
+                    Err(v) => return Err(format!("Unable to create dir: {:?}", v)),
+                }
+
+                parent_dir = &parent_dir[0..v];
+            }
+
             // Create target file
-            let target_path = path.join(file.name());
+            let target_path = path.join(&filename);
             println!("target_path: {:?}", target_path);
 
-            installed_files.push(file.name().to_string());
+            installed_files.push(filename.to_string());
 
             // Check to make sure this isn't a directory
-            if file.name().ends_with("/") || file.name().ends_with("\\") {
+            if filename.ends_with("/") || filename.ends_with("\\") {
                 // Create this directory and move on
                 match create_dir_all(target_path) {
                     Ok(v) => v,
-                    Err(v) => return Err(format!("Unable to open file: {:?}", v)),
+                    Err(v) => return Err(format!("Unable to create dir: {:?}", v)),
                 }
                 continue;
-            }
-
-            match target_path.parent() {
-                Some(v) => match create_dir_all(v) {
-                    Ok(v) => v,
-                    Err(v) => return Err(format!("Unable to open file: {:?}", v)),
-                },
-                None => {}
             }
 
             let mut target_file = match File::create(target_path) {

@@ -47,7 +47,7 @@
                                 </a>
                             </p>
                             <p class="control">
-                                <a class="button" v-on:click="exit">
+                                <a class="button" v-on:click="modify_packages">
                                     Modify
                                 </a>
                             </p>
@@ -70,6 +70,7 @@
                                         <label class="checkbox">
                                             <input type="checkbox" v-model="package.default" />
                                             {{ package.name }}
+                                            <span v-if="package.installed"><i>(installed)</i></span>
                                         </label>
                                         <p>
                                             {{ package.description }}
@@ -79,8 +80,8 @@
                             </div>
                         </div>
 
-                        <div class="subtitle is-6">Install Location</div>
-                        <div class="field has-addons">
+                        <div class="subtitle is-6" v-if="show_install_location">Install Location</div>
+                        <div class="field has-addons" v-if="show_install_location">
                             <div class="control is-expanded">
                                 <input class="input" type="text" v-model="install_location"
                                        placeholder="Enter a install path here">
@@ -135,6 +136,7 @@
     </div>
 
     <script src="/api/config"></script>
+    <script src="/api/packages"></script>
     <script src="/js/helpers.js"></script>
     <script src="/js/vue.min.js"></script>
     <script>
@@ -146,6 +148,7 @@
             el: '#app',
             data: {
                 config : config,
+                packages : packages,
                 install_location : "",
                 modify_install : false,
                 select_packages : true,
@@ -155,6 +158,7 @@
                 progress : 0,
                 progress_message : "",
                 has_error : false,
+                show_install_location : true,
                 error : "",
                 metadata : {
                     database : [],
@@ -216,6 +220,10 @@
                 "cancel_uninstall": function() {
                     app.confirm_uninstall = false;
                 },
+                "modify_packages": function() {
+                    app.select_packages = true;
+                    app.modify_install = false;
+                },
                 "uninstall": function() {
                     app.confirm_uninstall = false;
                     this.select_packages = false;
@@ -248,8 +256,30 @@
             if (e.preexisting_install) {
                 app.modify_install = true;
                 app.select_packages = false;
+                app.show_install_location = false;
                 app.install_location = e.install_path;
+
+                // Copy over installed packages
+                for (var x = 0; x < config.length; x++) {
+                    config[x].default = false;
+                    config[x].installed = false;
+                }
+
+                for (var i = 0; i < packages.length; i++) {
+                    // Find this config package
+                    for (var x = 0; x < config.length; x++) {
+                        if (config[x].name === packages[i].name) {
+                            config[x].default = true;
+                            config[x].installed = true;
+                        }
+                    }
+                }
+
             } else {
+                for (var x = 0; x < config.length; x++) {
+                    config[x].installed = false;
+                }
+
                 ajax("/api/default-path", function(e) {
                     if (e.path != null) {
                         app.install_location = e.path;

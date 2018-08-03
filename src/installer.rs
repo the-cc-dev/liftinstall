@@ -85,6 +85,7 @@ impl InstallerFramework {
         messages: &Sender<InstallMessage>,
         fresh_install: bool,
     ) -> Result<(), String> {
+        // TODO: Uninstall packages that aren't selected
         println!(
             "Framework: Installing {:?} to {:?}",
             items,

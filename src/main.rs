@@ -3,7 +3,7 @@
 //! The main entrypoint for the application. Orchestrates the building of the installation
 //! framework, and opens necessary HTTP servers/frontends.
 
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 
 #[cfg(windows)]
 extern crate nfd;
@@ -77,6 +77,7 @@ fn main() {
 
     // Startup HTTP server for handling the web view
     let http_address = format!("http://{}", server.get_addr());
+    println!("Server: {:?}", http_address);
 
     // Init the web view
     let size = (1024, 500);

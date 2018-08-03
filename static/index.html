@@ -7,19 +7,11 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>yuzu Installer</title>
 
-    <link rel="stylesheet" href="/css/bulma.css" type="text/css">
+    <link rel="stylesheet" href="/css/bulma.min.css" type="text/css">
     <link rel="stylesheet" href="/css/main.css" type="text/css">
 </head>
 <body>
     <div id="app">
-        <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
-            <div class="navbar-brand">
-            <span class="navbar-item">
-                <img src="/img/logo.png" v-bind:alt="config.general.name">
-            </span>
-            </div>
-        </nav>
-
         <!-- Main content -->
         <section class="section">
             <div class="container">
@@ -141,7 +133,7 @@
 
     <script src="/api/config"></script>
     <script src="/js/helpers.js"></script>
-    <script src="/js/vue.js"></script>
+    <script src="/js/vue.min.js"></script>
     <script>
         function selectFileCallback(name) {
             app.install_location = name;

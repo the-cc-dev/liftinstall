@@ -77,7 +77,7 @@ fn main() {
     let http_address = format!("http://{}", server.get_addr());
 
     // Init the web view
-    let size = (1024, 550);
+    let size = (1024, 500);
     let resizable = false;
     let debug = true;
 

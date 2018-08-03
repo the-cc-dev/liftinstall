@@ -33,13 +33,12 @@ pub fn file_from_string(file_path: &str) -> Option<(String, &'static [u8])> {
     let contents = include_files_as_assets!(
         file_path,
         "/index.html",
-        "/css/bulma.css",
+        "/css/bulma.min.css",
         "/css/main.css",
         "/img/logo.png",
         "/js/helpers.js",
-        "/js/vue.js",
         "/js/vue.min.js"
     )?;
 
-    Some((string_mime, contents)) //(*ASSETS.get(file_path)?).to_owned()))
+    Some((string_mime, contents))
 }

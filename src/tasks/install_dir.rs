@@ -7,8 +7,6 @@ use tasks::TaskParamType;
 
 use std::fs::create_dir_all;
 use std::fs::read_dir;
-use std::thread;
-use std::time::Duration;
 
 pub struct VerifyInstallDirTask {
     pub clean_install: bool,
@@ -34,7 +32,6 @@ impl Task for VerifyInstallDirTask {
                 .map_err(|x| format!("Failed to create install directory: {:?}", x))?;
         }
 
-        thread::sleep(Duration::new(1, 0));
         if self.clean_install {
             let paths = read_dir(&path)
                 .map_err(|x| format!("Failed to read install destination: {:?}", x))?;

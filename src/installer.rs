@@ -94,8 +94,24 @@ impl InstallerFramework {
                 .expect("Install directory not initialised")
         );
 
+        // Calculate packages to *uninstall*
+        let mut uninstall_items = Vec::new();
+        if !fresh_install {
+            for package in &self.database {
+                if !items.contains(&package.name) {
+                    uninstall_items.push(package.name.clone());
+                }
+            }
+
+            println!(
+                "Framework: Uninstalling {:?} additionally.",
+                uninstall_items
+            );
+        }
+
         let task = Box::new(InstallTask {
             items,
+            uninstall_items,
             fresh_install,
         });
 

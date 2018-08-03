@@ -22,8 +22,12 @@ pub mod uninstall_pkg;
 /// An abstraction over the various paramaters that can be passed around.
 pub enum TaskParamType {
     None,
+    /// Metadata about a file
     File(Version, File),
+    /// Downloaded contents of a file
     FileContents(Version, Vec<u8>),
+    /// Tells the runtime to break parsing other dependencies
+    Break
 }
 
 /// A Task is a small, async task conforming to a fixed set of inputs/outputs.
@@ -89,13 +93,25 @@ impl DependencyTree {
         let mut count = 0;
 
         for i in &mut self.dependencies {
-            inputs.push(i.execute(context, &|msg: &str, progress: f32| {
+            let result = i.execute(context, &|msg: &str, progress: f32| {
                 messenger(
                     msg,
                     progress / total_tasks + (1.0 / total_tasks) * count as f32,
                 )
-            })?);
+            })?;
+
+            // Check to see if we skip matching other dependencies
+            let do_break = match &result {
+                &TaskParamType::Break => true,
+                _ => false
+            };
+
+            inputs.push(result);
             count += 1;
+
+            if do_break {
+                break;
+            }
         }
 
         self.task

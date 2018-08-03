@@ -6,12 +6,14 @@ use tasks::install_dir::VerifyInstallDirTask;
 use tasks::install_pkg::InstallPackageTask;
 use tasks::save_database::SaveDatabaseTask;
 use tasks::save_executable::SaveExecutableTask;
+use tasks::uninstall_pkg::UninstallPackageTask;
 
 use tasks::Task;
 use tasks::TaskParamType;
 
 pub struct InstallTask {
     pub items: Vec<String>,
+    pub uninstall_items: Vec<String>,
     pub fresh_install: bool,
 }
 
@@ -35,6 +37,13 @@ impl Task for InstallTask {
 
         for item in &self.items {
             elements.push(Box::new(InstallPackageTask { name: item.clone() }));
+        }
+
+        for item in &self.uninstall_items {
+            elements.push(Box::new(UninstallPackageTask {
+                name: item.clone(),
+                optional: false,
+            }));
         }
 
         elements.push(Box::new(SaveDatabaseTask {}));

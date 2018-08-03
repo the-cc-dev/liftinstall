@@ -19,17 +19,29 @@ impl Task for DownloadPackageTask {
     fn execute(
         &mut self,
         mut input: Vec<TaskParamType>,
-        _: &mut InstallerFramework,
+        context: &mut InstallerFramework,
         messenger: &Fn(&str, f32),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 1);
-        messenger(&format!("Downloading package {:?}...", self.name), 0.0);
 
         let file = input.pop().expect("Should have input from resolver!");
         let (version, file) = match file {
             TaskParamType::File(v, f) => (v, f),
             _ => return Err(format!("Unexpected param type to download package")),
         };
+
+        // Check to see if this is the newest file available already
+        for element in &context.database {
+            if element.name == self.name {
+                if element.version == version {
+                    println!("{:?} is already up to date.", self.name);
+                    return Ok(TaskParamType::Break);
+                }
+                break;
+            }
+        }
+
+        messenger(&format!("Downloading package {:?}...", self.name), 0.0);
 
         let mut downloaded = 0;
         let mut data_storage: Vec<u8> = Vec::new();

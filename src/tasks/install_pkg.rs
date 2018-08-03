@@ -51,7 +51,12 @@ impl Task for InstallPackageTask {
             None => return Err(format!("Package {:?} could not be found.", self.name)),
         };
 
-        let _ = input.pop().expect("Should have input from uninstaller!");
+        // Check to see if no archive was available.
+        match input.pop().expect("Should have input from uninstaller!") {
+            // No file to install, but all is good.
+            TaskParamType::Break => return Ok(TaskParamType::None),
+            _ => {}
+        }
 
         let data = input.pop().expect("Should have input from resolver!");
         let (file, data) = match data {
@@ -97,19 +102,16 @@ impl Task for InstallPackageTask {
 
             // Create target file
             let target_path = path.join(&filename);
-            println!("target_path: {:?}", target_path);
-
-            installed_files.push(filename.to_string());
 
             // Check to make sure this isn't a directory
             if filename.ends_with("/") || filename.ends_with("\\") {
-                // Create this directory and move on
-                match create_dir_all(target_path) {
-                    Ok(v) => v,
-                    Err(v) => return Err(format!("Unable to create dir: {:?}", v)),
-                }
+                // Directory was already created
                 continue;
             }
+
+            println!("Creating file: {:?}", target_path);
+
+            installed_files.push(filename.to_string());
 
             let mut target_file = match File::create(target_path) {
                 Ok(v) => v,

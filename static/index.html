@@ -219,15 +219,12 @@
 
                     var results = {};
 
-                    console.log("Packages: " + this.config.packages);
-
                     for (var package_index = 0; package_index < this.config.packages.length; package_index++) {
                         var current_package = this.config.packages[package_index];
                         if (current_package.default != null) {
                             results[current_package.name] = current_package.default;
                         }
                     }
-                    console.log("Results: " + results);
 
                     results["path"] = this.install_location;
 

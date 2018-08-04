@@ -4,6 +4,7 @@
 //! framework, and opens necessary HTTP servers/frontends.
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![deny(unsafe_code)]
 
 #[cfg(windows)]
 extern crate nfd;

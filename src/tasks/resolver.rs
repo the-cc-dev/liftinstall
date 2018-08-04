@@ -54,7 +54,7 @@ impl Task for ResolvePackageTask {
         let filtered_regex = package.source.match_regex.replace("#PLATFORM#", OS);
         let regex = match Regex::new(&filtered_regex) {
             Ok(v) => v,
-            Err(v) => return Err(format!("An error occured while compiling regex: {:?}", v)),
+            Err(v) => return Err(format!("An error occurred while compiling regex: {:?}", v)),
         };
 
         // Find the latest release in here

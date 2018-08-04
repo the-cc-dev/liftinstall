@@ -164,7 +164,10 @@ impl Service for WebService {
                         let mut framework = framework.write().unwrap();
 
                         match framework.uninstall(&sender) {
-                            Err(v) => sender.send(InstallMessage::Error(v)).unwrap(),
+                            Err(v) => {
+                                eprintln!("Uninstall error occurred: {:?}", v);
+                                sender.send(InstallMessage::Error(v)).unwrap();
+                            },
                             _ => {}
                         }
                         sender.send(InstallMessage::EOF).unwrap();
@@ -234,7 +237,10 @@ impl Service for WebService {
                         }
 
                         match framework.install(to_install, &sender, new_install) {
-                            Err(v) => sender.send(InstallMessage::Error(v)).unwrap(),
+                            Err(v) => {
+                                eprintln!("Install error occurred: {:?}", v);
+                                sender.send(InstallMessage::Error(v)).unwrap();
+                            },
                             _ => {}
                         }
                         sender.send(InstallMessage::EOF).unwrap();

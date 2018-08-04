@@ -126,10 +126,7 @@ fn main() {
         servers.push(server);
     }
 
-    let http_address = match http_address {
-        Some(v) => v,
-        None => panic!("No HTTP address found"),
-    };
+    let http_address = http_address.log_expect("No HTTP address found");
 
     let http_address = format!("http://localhost:{}", http_address.port());
 

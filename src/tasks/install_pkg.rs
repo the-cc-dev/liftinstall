@@ -18,6 +18,8 @@ use tasks::uninstall_pkg::UninstallPackageTask;
 
 use zip::ZipArchive;
 
+use logging::LoggingErrors;
+
 pub struct InstallPackageTask {
     pub name: String,
 }
@@ -34,7 +36,7 @@ impl Task for InstallPackageTask {
         let path = context
             .install_path
             .as_ref()
-            .expect("No install path specified");
+            .log_expect("No install path specified");
 
         let mut installed_files = Vec::new();
 
@@ -52,13 +54,16 @@ impl Task for InstallPackageTask {
         };
 
         // Check to see if no archive was available.
-        match input.pop().expect("Should have input from uninstaller!") {
+        match input
+            .pop()
+            .log_expect("Should have input from uninstaller!")
+        {
             // No file to install, but all is good.
             TaskParamType::Break => return Ok(TaskParamType::None),
             _ => {}
         }
 
-        let data = input.pop().expect("Should have input from resolver!");
+        let data = input.pop().log_expect("Should have input from resolver!");
         let (file, data) = match data {
             TaskParamType::FileContents(file, data) => (file, data),
             _ => return Err(format!("Unexpected param type to install package")),
@@ -74,7 +79,7 @@ impl Task for InstallPackageTask {
         let zip_size = zip.len();
 
         for i in 0..zip_size {
-            let mut file = zip.by_index(i).unwrap();
+            let mut file = zip.by_index(i).log_expect("Failed to iterate on .zip file");
 
             messenger(
                 &format!("Extracting {} ({} of {})", file.name(), i + 1, zip_size),

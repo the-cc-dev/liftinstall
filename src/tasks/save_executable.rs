@@ -12,6 +12,8 @@ use std::io::copy;
 
 use std::env::current_exe;
 
+use logging::LoggingErrors;
+
 pub struct SaveExecutableTask {}
 
 impl Task for SaveExecutableTask {
@@ -27,7 +29,7 @@ impl Task for SaveExecutableTask {
         let path = context
             .install_path
             .as_ref()
-            .expect("No install path specified");
+            .log_expect("No install path specified");
 
         let current_app = match current_exe() {
             Ok(v) => v,

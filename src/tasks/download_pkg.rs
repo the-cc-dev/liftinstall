@@ -11,6 +11,8 @@ use http::stream_file;
 
 use number_prefix::{decimal_prefix, Prefixed, Standalone};
 
+use logging::LoggingErrors;
+
 pub struct DownloadPackageTask {
     pub name: String,
 }
@@ -24,7 +26,7 @@ impl Task for DownloadPackageTask {
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 1);
 
-        let file = input.pop().expect("Should have input from resolver!");
+        let file = input.pop().log_expect("Should have input from resolver!");
         let (version, file) = match file {
             TaskParamType::File(v, f) => (v, f),
             _ => return Err(format!("Unexpected param type to download package")),

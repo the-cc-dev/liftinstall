@@ -10,6 +10,8 @@ use installer::LocalInstallation;
 use std::fs::remove_dir;
 use std::fs::remove_file;
 
+use logging::LoggingErrors;
+
 pub struct UninstallPackageTask {
     pub name: String,
     pub optional: bool,
@@ -27,7 +29,7 @@ impl Task for UninstallPackageTask {
         let path = context
             .install_path
             .as_ref()
-            .expect("No install path specified");
+            .log_expect("No install path specified");
 
         let mut metadata: Option<LocalInstallation> = None;
         for i in 0..context.database.len() {

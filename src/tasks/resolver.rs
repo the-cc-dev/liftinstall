@@ -11,6 +11,8 @@ use config::PackageDescription;
 
 use regex::Regex;
 
+use logging::LoggingErrors;
+
 pub struct ResolvePackageTask {
     pub name: String,
 }
@@ -76,7 +78,7 @@ impl Task for ResolvePackageTask {
             .into_iter()
             .filter(|x| regex.is_match(&x.name))
             .next()
-            .unwrap();
+            .log_expect("Searched file should have existed, but didn't");
 
         info!("Selected file: {:?}", latest_file);
 

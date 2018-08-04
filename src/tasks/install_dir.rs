@@ -8,6 +8,8 @@ use tasks::TaskParamType;
 use std::fs::create_dir_all;
 use std::fs::read_dir;
 
+use logging::LoggingErrors;
+
 pub struct VerifyInstallDirTask {
     pub clean_install: bool,
 }
@@ -25,7 +27,7 @@ impl Task for VerifyInstallDirTask {
         let path = context
             .install_path
             .as_ref()
-            .expect("No install path specified");
+            .log_expect("No install path specified");
 
         if !path.exists() {
             create_dir_all(&path)

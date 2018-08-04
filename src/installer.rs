@@ -22,6 +22,8 @@ use tasks::install::InstallTask;
 use tasks::uninstall::UninstallTask;
 use tasks::DependencyTree;
 
+use logging::LoggingErrors;
+
 /// A message thrown during the installation of packages.
 #[derive(Serialize)]
 pub enum InstallMessage {
@@ -91,7 +93,7 @@ impl InstallerFramework {
             items,
             self.install_path
                 .clone()
-                .expect("Install directory not initialised")
+                .log_expect("Install directory not initialised")
         );
 
         // Calculate packages to *uninstall*

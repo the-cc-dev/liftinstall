@@ -29,6 +29,8 @@ use assets;
 use installer::InstallMessage;
 use installer::InstallerFramework;
 
+use logging::LoggingErrors;
+
 #[derive(Serialize)]
 struct FileSelection {
     path: Option<String>,
@@ -38,22 +40,14 @@ struct FileSelection {
 /// application.
 pub struct WebServer {
     _handle: JoinHandle<()>,
-    addr: SocketAddr,
 }
 
 impl WebServer {
-    /// Returns the bound address that the server is running from.
-    pub fn get_addr(&self) -> SocketAddr {
-        self.addr.clone()
-    }
-
     /// Creates a new web server with the specified address.
     pub fn with_addr(
         framework: Arc<RwLock<InstallerFramework>>,
         addr: SocketAddr,
     ) -> Result<Self, HyperError> {
-        let (sender, receiver) = channel();
-
         let handle = thread::spawn(move || {
             let server = Http::new()
                 .bind(&addr, move || {
@@ -61,19 +55,12 @@ impl WebServer {
                         framework: framework.clone(),
                     })
                 })
-                .unwrap();
+                .log_expect("Failed to bind to port");
 
-            sender.send(server.local_addr().unwrap()).unwrap();
-
-            server.run().unwrap();
+            server.run().log_expect("Failed to run HTTP server");
         });
 
-        let addr = receiver.recv().unwrap();
-
-        Ok(WebServer {
-            _handle: handle,
-            addr,
-        })
+        Ok(WebServer { _handle: handle })
     }
 }
 
@@ -94,10 +81,18 @@ impl Service for WebService {
             // This endpoint should be usable directly from a <script> tag during loading.
             // TODO: Handle errors
             (&Get, "/api/config") => {
-                let framework = self.framework.read().unwrap();
+                let framework = self
+                    .framework
+                    .read()
+                    .log_expect("InstallerFramework has been dirtied");
 
-                let file =
-                    enscapsulate_json("config", &framework.get_config().to_json_str().unwrap());
+                let file = enscapsulate_json(
+                    "config",
+                    &framework
+                        .get_config()
+                        .to_json_str()
+                        .log_expect("Failed to render JSON representation of config"),
+                );
 
                 Response::<hyper::Body>::new()
                     .with_header(ContentLength(file.len() as u64))
@@ -107,11 +102,15 @@ impl Service for WebService {
             // This endpoint should be usable directly from a <script> tag during loading.
             // TODO: Handle errors
             (&Get, "/api/packages") => {
-                let framework = self.framework.read().unwrap();
+                let framework = self
+                    .framework
+                    .read()
+                    .log_expect("InstallerFramework has been dirtied");
 
                 let file = enscapsulate_json(
                     "packages",
-                    &serde_json::to_string(&framework.database).unwrap(),
+                    &serde_json::to_string(&framework.database)
+                        .log_expect("Failed to render JSON representation of database"),
                 );
 
                 Response::<hyper::Body>::new()
@@ -121,12 +120,16 @@ impl Service for WebService {
             }
             // Returns the default path for a installation
             (&Get, "/api/default-path") => {
-                let framework = self.framework.read().unwrap();
+                let framework = self
+                    .framework
+                    .read()
+                    .log_expect("InstallerFramework has been dirtied");
                 let path = framework.get_default_path();
 
                 let response = FileSelection { path };
 
-                let file = serde_json::to_string(&response).unwrap();
+                let file = serde_json::to_string(&response)
+                    .log_expect("Failed to render JSON payload of default path object");
 
                 Response::<hyper::Body>::new()
                     .with_header(ContentLength(file.len() as u64))
@@ -139,11 +142,15 @@ impl Service for WebService {
             }
             // Gets properties such as if the application is in maintenance mode
             (&Get, "/api/installation-status") => {
-                let framework = self.framework.read().unwrap();
+                let framework = self
+                    .framework
+                    .read()
+                    .log_expect("InstallerFramework has been dirtied");
 
                 let response = framework.get_installation_status();
 
-                let file = serde_json::to_string(&response).unwrap();
+                let file = serde_json::to_string(&response)
+                    .log_expect("Failed to render JSON payload of installation status object");
 
                 Response::<hyper::Body>::new()
                     .with_header(ContentLength(file.len() as u64))
@@ -161,32 +168,51 @@ impl Service for WebService {
 
                     // Startup a thread to do this operation for us
                     thread::spawn(move || {
-                        let mut framework = framework.write().unwrap();
+                        let mut framework = framework
+                            .write()
+                            .log_expect("InstallerFramework has been dirtied");
 
                         match framework.uninstall(&sender) {
                             Err(v) => {
                                 error!("Uninstall error occurred: {:?}", v);
-                                sender.send(InstallMessage::Error(v)).unwrap();
-                            },
+                                match sender.send(InstallMessage::Error(v)) {
+                                    Err(v) => {
+                                        error!("Failed to send uninstall error: {:?}", v);
+                                    }
+                                    _ => {}
+                                };
+                            }
                             _ => {}
                         }
-                        sender.send(InstallMessage::EOF).unwrap();
+
+                        match sender.send(InstallMessage::EOF) {
+                            Err(v) => {
+                                error!("Failed to send EOF to client: {:?}", v);
+                            }
+                            _ => {}
+                        };
                     });
 
                     // Spawn a thread for transforming messages to chunk messages
                     thread::spawn(move || {
                         let mut tx = tx;
                         loop {
-                            let response = receiver.recv().unwrap();
+                            let response = receiver
+                                .recv()
+                                .log_expect("Failed to recieve message from runner thread");
 
                             match &response {
                                 &InstallMessage::EOF => break,
                                 _ => {}
                             }
 
-                            let mut response = serde_json::to_string(&response).unwrap();
+                            let mut response = serde_json::to_string(&response)
+                                .log_expect("Failed to render JSON logging response payload");
                             response.push('\n');
-                            tx = tx.send(Ok(response.into_bytes().into())).wait().unwrap();
+                            tx = tx
+                                .send(Ok(response.into_bytes().into()))
+                                .wait()
+                                .log_expect("Failed to write JSON response payload to client");
                         }
                     });
 
@@ -222,14 +248,18 @@ impl Service for WebService {
                     }
 
                     // The frontend always provides this
-                    let path = path.unwrap();
+                    let path = path.log_expect(
+                        "No path specified by frontend when one should have already existed",
+                    );
 
                     let (sender, receiver) = channel();
                     let (tx, rx) = hyper::Body::pair();
 
                     // Startup a thread to do this operation for us
                     thread::spawn(move || {
-                        let mut framework = framework.write().unwrap();
+                        let mut framework = framework
+                            .write()
+                            .log_expect("InstallerFramework has been dirtied");
 
                         let new_install = !framework.preexisting_install;
                         if new_install {
@@ -238,28 +268,45 @@ impl Service for WebService {
 
                         match framework.install(to_install, &sender, new_install) {
                             Err(v) => {
-                                error!("Install error occurred: {:?}", v);
-                                sender.send(InstallMessage::Error(v)).unwrap();
-                            },
+                                error!("Uninstall error occurred: {:?}", v);
+                                match sender.send(InstallMessage::Error(v)) {
+                                    Err(v) => {
+                                        error!("Failed to send uninstall error: {:?}", v);
+                                    }
+                                    _ => {}
+                                };
+                            }
                             _ => {}
                         }
-                        sender.send(InstallMessage::EOF).unwrap();
+
+                        match sender.send(InstallMessage::EOF) {
+                            Err(v) => {
+                                error!("Failed to send EOF to client: {:?}", v);
+                            }
+                            _ => {}
+                        };
                     });
 
                     // Spawn a thread for transforming messages to chunk messages
                     thread::spawn(move || {
                         let mut tx = tx;
                         loop {
-                            let response = receiver.recv().unwrap();
+                            let response = receiver
+                                .recv()
+                                .log_expect("Failed to recieve message from runner thread");
 
                             match &response {
                                 &InstallMessage::EOF => break,
                                 _ => {}
                             }
 
-                            let mut response = serde_json::to_string(&response).unwrap();
+                            let mut response = serde_json::to_string(&response)
+                                .log_expect("Failed to render JSON logging response payload");
                             response.push('\n');
-                            tx = tx.send(Ok(response.into_bytes().into())).wait().unwrap();
+                            tx = tx
+                                .send(Ok(response.into_bytes().into()))
+                                .wait()
+                                .log_expect("Failed to write JSON response payload to client");
                         }
                     });
 
@@ -281,7 +328,9 @@ impl Service for WebService {
 
                 match assets::file_from_string(&path) {
                     Some((content_type, file)) => {
-                        let content_type = ContentType(content_type.parse().unwrap());
+                        let content_type = ContentType(content_type.parse().log_expect(
+                            "Failed to parse content type into correct representation",
+                        ));
                         Response::<hyper::Body>::new()
                             .with_header(ContentLength(file.len() as u64))
                             .with_header(content_type)

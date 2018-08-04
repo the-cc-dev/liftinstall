@@ -78,7 +78,6 @@ impl Service for WebService {
     fn call(&self, req: Self::Request) -> Self::Future {
         Box::new(future::ok(match (req.method(), req.path()) {
             // This endpoint should be usable directly from a <script> tag during loading.
-            // TODO: Handle errors
             (&Get, "/api/config") => {
                 let framework = self
                     .framework
@@ -99,7 +98,6 @@ impl Service for WebService {
                     .with_body(file)
             }
             // This endpoint should be usable directly from a <script> tag during loading.
-            // TODO: Handle errors
             (&Get, "/api/packages") => {
                 let framework = self
                     .framework

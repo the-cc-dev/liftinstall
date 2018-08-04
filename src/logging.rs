@@ -32,11 +32,13 @@ where
     Self: Sized,
 {
     /// Unwraps this object. See `unwrap()`.
+    #[inline]
     fn log_unwrap(self) -> T {
         self.log_expect("Failed to unwrap")
     }
 
     /// Unwraps this object, with a specified error message on failure. See `expect()`.
+    #[inline]
     fn log_expect(self, msg: &str) -> T;
 }
 

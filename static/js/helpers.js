@@ -73,13 +73,19 @@ function stream_ajax(path, callback, successCallback, failCallback, data) {
         }
     });
 
+    var buffer = "";
+
     req.onreadystatechange = function() {
         if(req.readyState > 2) {
             var newData = req.responseText.substr(req.seenBytes);
 
-            var lines = newData.split("\n");
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i].trim();
+            buffer += newData;
+
+            var pointer;
+            while ((pointer = newData.indexOf("\n")) >= 0) {
+                var line = newData.substring(0, pointer).trim();
+                newData = newData.substring(pointer + 1);
+
                 if (line.length === 0) {
                     continue;
                 }

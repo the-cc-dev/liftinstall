@@ -38,6 +38,8 @@ log = "0.4"
 fern = "0.5"
 chrono = "0.4.5"
 
+clap = "2.32.0"
+
 [target.'cfg(windows)'.dependencies]
 # NFD is needed on Windows, as web-view doesn't work correctly here
 nfd = "0.0.4"

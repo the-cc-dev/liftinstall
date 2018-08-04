@@ -19,7 +19,7 @@
         <section class="section">
             <div class="container">
                 <div class="columns">
-                    <div class="column is-one-third">
+                    <div class="column is-one-third" v-if="!is_launcher">
                         <h1 class="title">
                             Welcome to the {{ config.general.name }} installer!
                         </h1>
@@ -97,7 +97,8 @@
                     </div>
 
                     <div class="column" v-else-if="is_installing">
-                        <h4 class="subtitle">Installing...</h4>
+                        <h4 class="subtitle" v-if="is_launcher">Checking for updates...</h4>
+                        <h4 class="subtitle" v-else>Installing...</h4>
                         <div v-html="config.general.installing_message"></div>
                         <br />
 
@@ -136,10 +137,37 @@
     </div>
 
     <script src="/api/config"></script>
-    <script src="/api/packages"></script>
     <script src="/js/helpers.js"></script>
     <script src="/js/vue.min.js"></script>
     <script>
+        // Overwrite loggers with the logging backend
+        window.onerror = function(msg, url, line) {
+            window.external.invoke(JSON.stringify({
+                Log: {
+                    kind: "error",
+                    msg: msg + " @ " + url + ":" + line
+                }
+            }));
+        };
+
+        // Borrowed from http://tobyho.com/2012/07/27/taking-over-console-log/
+        function intercept(method){
+            console[method] = function(){
+                var message = Array.prototype.slice.apply(arguments).join(' ');
+                window.external.invoke(JSON.stringify({
+                    Log: {
+                        kind: method,
+                        msg: message
+                    }
+                }));
+            }
+        }
+
+        var methods = ['log', 'warn', 'error'];
+        for (var i = 0; i < methods.length; i++) {
+            intercept(methods[i]);
+        }
+
         document.getElementById("window-title").innerText = config.name + " Installer";
 
         function selectFileCallback(name) {
@@ -150,16 +178,24 @@
             el: '#app',
             data: {
                 config : config,
-                packages : packages,
                 install_location : "",
+                // If the initial modify menu should be shown
                 modify_install : false,
+                // If the package selection screen should be shown
                 select_packages : true,
+                // If an installation operation is happening
                 is_installing : false,
+                // If an installation has completed successfully
                 is_finished : false,
+                // If the application should act as an launcher, rather than as an installer
+                is_launcher : false,
+                launcher_path : undefined,
+                // If a confirmation prompt should be shown
                 confirm_uninstall : false,
                 progress : 0,
                 progress_message : "",
                 has_error : false,
+                // If the option to pick an install location should be provided
                 show_install_location : true,
                 error : "",
                 metadata : {
@@ -205,10 +241,19 @@
                             app.is_installing = false;
                             app.has_error = true;
                             app.error = line.Error;
+
+                            // Exit anyway - don't want to disturb the user
+                            if (app.is_launcher) {
+                                app.exit();
+                            }
                         }
                     }, function(e) {
                         app.is_installing = false;
-                        app.is_finished = true;
+                        if (app.is_launcher) {
+                            app.exit();
+                        } else {
+                            app.is_finished = true;
+                        }
                     }, undefined, results);
                 },
                 "back_to_packages": function() {
@@ -269,16 +314,22 @@
                     app.config.packages[x].installed = false;
                 }
 
-                for (var i = 0; i < packages.length; i++) {
+                for (var i = 0; i < app.metadata.database.length; i++) {
                     // Find this config package
                     for (var x = 0; x < app.config.packages.length; x++) {
-                        if (app.config.packages[x].name === packages[i].name) {
+                        if (app.config.packages[x].name === app.metadata.database[i].name) {
                             app.config.packages[x].default = true;
                             app.config.packages[x].installed = true;
                         }
                     }
                 }
 
+                if (e.is_launcher) {
+                    document.getElementById("window-title").innerText = config.name + " Updater";
+
+                    app.is_launcher = true;
+                    app.install();
+                }
             } else {
                 for (var x = 0; x < app.config.packages.length; x++) {
                     app.config.packages[x].installed = false;

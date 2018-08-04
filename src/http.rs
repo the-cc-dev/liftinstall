@@ -13,6 +13,7 @@ pub fn stream_file<F>(url: &str, mut callback: F) -> Result<(), String>
 where
     F: FnMut(Vec<u8>, u64) -> (),
 {
+    // TODO: Decrease check time
     let mut client = match reqwest::get(url) {
         Ok(v) => v,
         Err(v) => return Err(format!("Failed to GET resource: {:?}", v)),

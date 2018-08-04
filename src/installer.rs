@@ -40,6 +40,8 @@ pub struct InstallerFramework {
     pub database: Vec<LocalInstallation>,
     pub install_path: Option<PathBuf>,
     pub preexisting_install: bool,
+    pub is_launcher: bool,
+    pub launcher_path: Option<String>,
 }
 
 /// Contains basic properties on the status of the session. Subset of InstallationFramework.
@@ -48,6 +50,8 @@ pub struct InstallationStatus {
     pub database: Vec<LocalInstallation>,
     pub install_path: Option<String>,
     pub preexisting_install: bool,
+    pub is_launcher: bool,
+    pub launcher_path: Option<String>,
 }
 
 /// Tracks the state of a local installation
@@ -184,6 +188,8 @@ impl InstallerFramework {
                 None => None,
             },
             preexisting_install: self.preexisting_install,
+            is_launcher: self.is_launcher,
+            launcher_path: self.launcher_path.clone(),
         }
     }
 
@@ -194,6 +200,8 @@ impl InstallerFramework {
             database: Vec::new(),
             install_path: None,
             preexisting_install: false,
+            is_launcher: false,
+            launcher_path: None,
         }
     }
 
@@ -217,6 +225,8 @@ impl InstallerFramework {
             database,
             install_path: Some(path),
             preexisting_install: true,
+            is_launcher: false,
+            launcher_path: None,
         })
     }
 }

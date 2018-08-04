@@ -30,6 +30,7 @@ use installer::InstallMessage;
 use installer::InstallerFramework;
 
 use logging::LoggingErrors;
+use std::process::Command;
 
 #[derive(Serialize)]
 struct FileSelection {
@@ -135,6 +136,17 @@ impl Service for WebService {
             }
             // Immediately exits the application
             (&Get, "/api/exit") => {
+                let framework = self
+                    .framework
+                    .read()
+                    .log_expect("InstallerFramework has been dirtied");
+
+                if let Some(ref v) = framework.launcher_path {
+                    Command::new(v)
+                        .spawn()
+                        .log_expect("Unable to start child process");
+                }
+
                 exit(0);
             }
             // Gets properties such as if the application is in maintenance mode

@@ -37,6 +37,8 @@ extern crate log;
 
 extern crate chrono;
 
+extern crate clap;
+
 mod assets;
 mod config;
 mod http;
@@ -65,12 +67,17 @@ use std::sync::RwLock;
 
 use logging::LoggingErrors;
 
+use clap::App;
+use clap::Arg;
+use log::Level;
+
 // TODO: Fetch this over a HTTP request?
 static RAW_CONFIG: &'static str = include_str!("../config.toml");
 
 #[derive(Deserialize, Debug)]
 enum CallbackType {
     SelectInstallDir { callback_name: String },
+    Log { msg: String, kind: String },
 }
 
 fn main() {
@@ -80,6 +87,17 @@ fn main() {
 
     let app_name = config.general.name.clone();
 
+    let matches = App::new(format!("{} installer", app_name))
+        .version(env!("CARGO_PKG_VERSION"))
+        .about(format!("An interactive installer for {}", app_name).as_ref())
+        .arg(
+            Arg::with_name("launcher")
+                .long("launcher")
+                .value_name("TARGET")
+                .help("Launches the specified executable after checking for updates")
+                .takes_value(true),
+        ).get_matches();
+
     info!("{} installer", app_name);
 
     let current_exe = std::env::current_exe().log_expect("Current executable could not be found");
@@ -87,12 +105,20 @@ fn main() {
         .parent()
         .log_expect("Parent directory of executable could not be found");
     let metadata_file = current_path.join("metadata.json");
-    let framework = if metadata_file.exists() {
+    let mut framework = if metadata_file.exists() {
         info!("Using pre-existing metadata file: {:?}", metadata_file);
         InstallerFramework::new_with_db(config, current_path).log_expect("Unable to parse metadata")
     } else {
         info!("Starting fresh install");
         InstallerFramework::new(config)
+    };
+
+    let is_launcher = if let Some(string) = matches.value_of("launcher") {
+        framework.is_launcher = true;
+        framework.launcher_path = Some(string.to_string());
+        true
+    } else {
+        false
     };
 
     // Firstly, allocate us an epidermal port
@@ -134,7 +160,8 @@ fn main() {
     let http_address = format!("http://localhost:{}", http_address.port());
 
     // Init the web view
-    let size = (1024, 500);
+    let size = if is_launcher { (600, 300) } else { (1024, 500) };
+
     let resizable = false;
     let debug = true;
 
@@ -172,6 +199,16 @@ fn main() {
                         debug!("Injecting response: {}", command);
                         wv.eval(&command);
                     }
+                }
+                CallbackType::Log { msg, kind } => {
+                    let kind = match kind.as_ref() {
+                        "info" | "log" => Level::Info,
+                        "warn" => Level::Warn,
+                        "error" => Level::Error,
+                        _ => Level::Error,
+                    };
+
+                    log!(target: "liftinstall::frontend-js", kind, "{}", msg);
                 }
             }
         },

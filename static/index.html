@@ -5,7 +5,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>yuzu Installer</title>
+    <title id="window-title">... Installer</title>
 
     <link rel="icon" href="/favicon.ico" />
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
@@ -140,6 +140,8 @@
     <script src="/js/helpers.js"></script>
     <script src="/js/vue.min.js"></script>
     <script>
+        document.getElementById("window-title").innerText = config.name + " Installer";
+
         function selectFileCallback(name) {
             app.install_location = name;
         }

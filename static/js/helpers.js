@@ -53,7 +53,7 @@ function ajax(path, successCallback, failCallback, data) {
 
 /**
  * Makes a AJAX request, streaming each line as it arrives. Type should be text/plain,
- * each line will be interpeted as JSON seperately.
+ * each line will be interpreted as JSON separately.
  *
  * @param path The path to connect to.
  * @param callback A callback with a JSON payload. Called for every line as it comes.

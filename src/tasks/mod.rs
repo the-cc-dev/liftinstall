@@ -19,7 +19,7 @@ pub mod save_executable;
 pub mod uninstall;
 pub mod uninstall_pkg;
 
-/// An abstraction over the various paramaters that can be passed around.
+/// An abstraction over the various parameters that can be passed around.
 pub enum TaskParamType {
     None,
     /// Metadata about a file

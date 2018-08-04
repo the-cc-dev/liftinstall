@@ -84,7 +84,7 @@ impl Service for WebService {
                     .read()
                     .log_expect("InstallerFramework has been dirtied");
 
-                let file = enscapsulate_json(
+                let file = encapsulate_json(
                     "config",
                     &framework
                         .get_config()
@@ -104,7 +104,7 @@ impl Service for WebService {
                     .read()
                     .log_expect("InstallerFramework has been dirtied");
 
-                let file = enscapsulate_json(
+                let file = encapsulate_json(
                     "packages",
                     &serde_json::to_string(&framework.database)
                         .log_expect("Failed to render JSON representation of database"),
@@ -187,7 +187,7 @@ impl Service for WebService {
                         loop {
                             let response = receiver
                                 .recv()
-                                .log_expect("Failed to recieve message from runner thread");
+                                .log_expect("Failed to receive message from runner thread");
 
                             if let InstallMessage::EOF = response {
                                 break;
@@ -254,9 +254,9 @@ impl Service for WebService {
                         }
 
                         if let Err(v) = framework.install(to_install, &sender, new_install) {
-                            error!("Uninstall error occurred: {:?}", v);
+                            error!("Install error occurred: {:?}", v);
                             if let Err(v) = sender.send(InstallMessage::Error(v)) {
-                                error!("Failed to send uninstall error: {:?}", v);
+                                error!("Failed to send install error: {:?}", v);
                             }
                         }
 
@@ -271,7 +271,7 @@ impl Service for WebService {
                         loop {
                             let response = receiver
                                 .recv()
-                                .log_expect("Failed to recieve message from runner thread");
+                                .log_expect("Failed to receive message from runner thread");
 
                             if let InstallMessage::EOF = response {
                                 break;
@@ -323,6 +323,6 @@ impl Service for WebService {
 }
 
 /// Encapsulates JSON as a injectable Javascript script.
-fn enscapsulate_json(field_name: &str, json: &str) -> String {
+fn encapsulate_json(field_name: &str, json: &str) -> String {
     format!("var {} = {};", field_name, json)
 }

@@ -86,7 +86,7 @@ impl InstallerFramework {
         fresh_install: bool,
     ) -> Result<(), String> {
         // TODO: Uninstall packages that aren't selected
-        println!(
+        info!(
             "Framework: Installing {:?} to {:?}",
             items,
             self.install_path
@@ -103,7 +103,7 @@ impl InstallerFramework {
                 }
             }
 
-            println!(
+            info!(
                 "Framework: Uninstalling {:?} additionally.",
                 uninstall_items
             );
@@ -117,12 +117,12 @@ impl InstallerFramework {
 
         let mut tree = DependencyTree::build(task);
 
-        println!("Dependency tree:\n{}", tree);
+        info!("Dependency tree:\n{}", tree);
 
         tree.execute(self, &|msg: &str, progress: f32| match messages
             .send(InstallMessage::Status(msg.to_string(), progress as _))
         {
-            Err(v) => eprintln!("Failed to submit queue message: {:?}", v),
+            Err(v) => error!("Failed to submit queue message: {:?}", v),
             _ => {}
         }).map(|_x| ())
     }
@@ -137,12 +137,12 @@ impl InstallerFramework {
 
         let mut tree = DependencyTree::build(task);
 
-        println!("Dependency tree:\n{}", tree);
+        info!("Dependency tree:\n{}", tree);
 
         tree.execute(self, &|msg: &str, progress: f32| match messages
             .send(InstallMessage::Status(msg.to_string(), progress as _))
         {
-            Err(v) => eprintln!("Failed to submit queue message: {:?}", v),
+            Err(v) => error!("Failed to submit queue message: {:?}", v),
             _ => {}
         }).map(|_x| ())
     }

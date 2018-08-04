@@ -28,6 +28,12 @@ extern crate semver;
 
 extern crate zip;
 
+extern crate fern;
+#[macro_use]
+extern crate log;
+
+extern crate chrono;
+
 mod assets;
 mod config;
 mod http;
@@ -35,6 +41,7 @@ mod installer;
 mod rest;
 mod sources;
 mod tasks;
+mod logging;
 
 use web_view::*;
 
@@ -62,20 +69,22 @@ enum CallbackType {
 }
 
 fn main() {
+    logging::setup_logger().expect("Unable to setup logging!");
+
     let config = Config::from_toml_str(RAW_CONFIG).unwrap();
 
     let app_name = config.general.name.clone();
 
-    println!("{} installer", app_name);
+    info!("{} installer", app_name);
 
     let current_exe = std::env::current_exe().unwrap();
     let current_path = current_exe.parent().unwrap();
     let metadata_file = current_path.join("metadata.json");
     let framework = if metadata_file.exists() {
-        println!("Using pre-existing metadata file: {:?}", metadata_file);
+        info!("Using pre-existing metadata file: {:?}", metadata_file);
         InstallerFramework::new_with_db(config, current_path).unwrap()
     } else {
-        println!("Starting fresh install");
+        info!("Starting fresh install");
         InstallerFramework::new(config)
     };
 
@@ -106,7 +115,7 @@ fn main() {
         let server = WebServer::with_addr(framework.clone(), address).unwrap();
 
         let addr = server.get_addr();
-        println!("Server: {:?}", addr);
+        debug!("Server: {:?}", addr);
 
         http_address = Some(addr);
 
@@ -136,7 +145,7 @@ fn main() {
             let command: CallbackType =
                 serde_json::from_str(msg).expect(&format!("Unable to parse string: {:?}", msg));
 
-            println!("Incoming payload: {:?}", command);
+            debug!("Incoming payload: {:?}", command);
 
             match command {
                 CallbackType::SelectInstallDir { callback_name } => {
@@ -155,7 +164,7 @@ fn main() {
                         let result =
                             serde_json::to_string(&result).expect("Unable to serialize response");
                         let command = format!("{}({});", callback_name, result);
-                        println!("Injecting response: {}", command);
+                        debug!("Injecting response: {}", command);
                         wv.eval(&command);
                     }
                 }

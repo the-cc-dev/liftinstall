@@ -109,7 +109,7 @@ impl Task for InstallPackageTask {
                 continue;
             }
 
-            println!("Creating file: {:?}", target_path);
+            info!("Creating file: {:?}", target_path);
 
             installed_files.push(filename.to_string());
 

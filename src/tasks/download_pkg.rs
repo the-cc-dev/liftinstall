@@ -34,7 +34,7 @@ impl Task for DownloadPackageTask {
         for element in &context.database {
             if element.name == self.name {
                 if element.version == version {
-                    println!("{:?} is already up to date.", self.name);
+                    info!("{:?} is already up to date.", self.name);
                     return Ok(TaskParamType::Break);
                 }
                 break;

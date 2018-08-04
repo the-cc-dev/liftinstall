@@ -165,7 +165,7 @@ impl Service for WebService {
 
                         match framework.uninstall(&sender) {
                             Err(v) => {
-                                eprintln!("Uninstall error occurred: {:?}", v);
+                                error!("Uninstall error occurred: {:?}", v);
                                 sender.send(InstallMessage::Error(v)).unwrap();
                             },
                             _ => {}
@@ -238,7 +238,7 @@ impl Service for WebService {
 
                         match framework.install(to_install, &sender, new_install) {
                             Err(v) => {
-                                eprintln!("Install error occurred: {:?}", v);
+                                error!("Install error occurred: {:?}", v);
                                 sender.send(InstallMessage::Error(v)).unwrap();
                             },
                             _ => {}

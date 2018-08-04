@@ -78,7 +78,7 @@ impl Task for ResolvePackageTask {
             .next()
             .unwrap();
 
-        println!("Selected file: {:?}", latest_file);
+        info!("Selected file: {:?}", latest_file);
 
         Ok(TaskParamType::File(latest_version, latest_file))
     }

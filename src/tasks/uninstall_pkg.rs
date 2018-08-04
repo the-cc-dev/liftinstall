@@ -61,7 +61,7 @@ impl Task for UninstallPackageTask {
         for file in package.files {
             let name = file.clone();
             let file = path.join(file);
-            println!("Deleting {:?}", file);
+            info!("Deleting {:?}", file);
 
             messenger(
                 &format!("Deleting {} ({} of {})", name, i + 1, max),
@@ -75,7 +75,7 @@ impl Task for UninstallPackageTask {
             };
 
             match result {
-                Err(v) => eprintln!("Failed to delete file: {:?}", v),
+                Err(v) => error!("Failed to delete file: {:?}", v),
                 _ => {}
             }
 

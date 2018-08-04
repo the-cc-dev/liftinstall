@@ -6,7 +6,6 @@ use serde_json;
 
 use std::fs::File;
 
-use std::env::home_dir;
 use std::env::var;
 
 use std::path::Path;
@@ -23,6 +22,8 @@ use tasks::uninstall::UninstallTask;
 use tasks::DependencyTree;
 
 use logging::LoggingErrors;
+
+use dirs::home_dir;
 
 /// A message thrown during the installation of packages.
 #[derive(Serialize)]
@@ -121,11 +122,10 @@ impl InstallerFramework {
 
         info!("Dependency tree:\n{}", tree);
 
-        tree.execute(self, &|msg: &str, progress: f32| match messages
-            .send(InstallMessage::Status(msg.to_string(), progress as _))
-        {
-            Err(v) => error!("Failed to submit queue message: {:?}", v),
-            _ => {}
+        tree.execute(self, &|msg: &str, progress: f64| {
+            if let Err(v) = messages.send(InstallMessage::Status(msg.to_string(), progress as _)) {
+                error!("Failed to submit queue message: {:?}", v);
+            }
         }).map(|_x| ())
     }
 
@@ -141,11 +141,10 @@ impl InstallerFramework {
 
         info!("Dependency tree:\n{}", tree);
 
-        tree.execute(self, &|msg: &str, progress: f32| match messages
-            .send(InstallMessage::Status(msg.to_string(), progress as _))
-        {
-            Err(v) => error!("Failed to submit queue message: {:?}", v),
-            _ => {}
+        tree.execute(self, &|msg: &str, progress: f64| {
+            if let Err(v) = messages.send(InstallMessage::Status(msg.to_string(), progress as _)) {
+                error!("Failed to submit queue message: {:?}", v);
+            }
         }).map(|_x| ())
     }
 
@@ -154,7 +153,7 @@ impl InstallerFramework {
         // We have to have a install path for us to be able to do anything
         let path = match self.install_path.clone() {
             Some(v) => v,
-            None => return Err(format!("No install directory for installer")),
+            None => return Err("No install directory for installer".to_string()),
         };
 
         let metadata_path = path.join("metadata.json");

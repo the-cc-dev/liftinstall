@@ -9,11 +9,11 @@ use reqwest;
 use std::io::Read;
 
 /// Streams a file from a HTTP server.
-pub fn stream_file<F>(url: String, mut callback: F) -> Result<(), String>
+pub fn stream_file<F>(url: &str, mut callback: F) -> Result<(), String>
 where
     F: FnMut(Vec<u8>, u64) -> (),
 {
-    let mut client = match reqwest::get(&url) {
+    let mut client = match reqwest::get(url) {
         Ok(v) => v,
         Err(v) => return Err(format!("Failed to GET resource: {:?}", v)),
     };

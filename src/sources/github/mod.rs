@@ -40,8 +40,7 @@ impl ReleaseSource for GithubReleases {
             .get(&format!(
                 "https://api.github.com/repos/{}/releases",
                 config.repo
-            ))
-            .header(UserAgent::new("liftinstall (j-selby)"))
+            )).header(UserAgent::new("liftinstall (j-selby)"))
             .send()
             .map_err(|x| format!("Error while sending HTTP request: {:?}", x))?;
 
@@ -53,43 +52,39 @@ impl ReleaseSource for GithubReleases {
             .text()
             .map_err(|x| format!("Failed to decode HTTP response body: {:?}", x))?;
 
-        let result: serde_json::Value =
-            serde_json::from_str(&body).map_err(|x| format!("Failed to parse response: {:?}", x))?;
+        let result: serde_json::Value = serde_json::from_str(&body)
+            .map_err(|x| format!("Failed to parse response: {:?}", x))?;
 
         let result: &Vec<serde_json::Value> = result
             .as_array()
-            .ok_or(format!("Response was not an array!"))?;
+            .ok_or_else(|| "Response was not an array!".to_string())?;
 
         // Parse JSON from server
-        for entry in result.into_iter() {
+        for entry in result.iter() {
             let mut files = Vec::new();
 
             let id: u64 = match entry["id"].as_u64() {
                 Some(v) => v,
-                None => return Err(format!("JSON payload missing information about ID")),
+                None => return Err("JSON payload missing information about ID".to_string()),
             };
 
             let assets = match entry["assets"].as_array() {
                 Some(v) => v,
-                None => return Err(format!("JSON payload not an array")),
+                None => return Err("JSON payload not an array".to_string()),
             };
 
-            for asset in assets.into_iter() {
+            for asset in assets.iter() {
                 let string = match asset["name"].as_str() {
                     Some(v) => v,
                     None => {
-                        return Err(format!(
-                            "JSON payload missing information about release name"
-                        ))
+                        return Err("JSON payload missing information about release name".to_string())
                     }
                 };
 
                 let url = match asset["browser_download_url"].as_str() {
                     Some(v) => v,
                     None => {
-                        return Err(format!(
-                            "JSON payload missing information about release URL"
-                        ))
+                        return Err("JSON payload missing information about release URL".to_string())
                     }
                 };
 

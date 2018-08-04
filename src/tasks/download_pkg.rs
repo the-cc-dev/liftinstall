@@ -22,14 +22,14 @@ impl Task for DownloadPackageTask {
         &mut self,
         mut input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f32),
+        messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 1);
 
         let file = input.pop().log_expect("Should have input from resolver!");
         let (version, file) = match file {
             TaskParamType::File(v, f) => (v, f),
-            _ => return Err(format!("Unexpected param type to download package")),
+            _ => return Err("Unexpected param type to download package".to_string()),
         };
 
         // Check to see if this is the newest file available already
@@ -48,7 +48,7 @@ impl Task for DownloadPackageTask {
         let mut downloaded = 0;
         let mut data_storage: Vec<u8> = Vec::new();
 
-        stream_file(file.url, |data, size| {
+        stream_file(&file.url, |data, size| {
             {
                 data_storage.extend_from_slice(&data);
             }
@@ -58,7 +58,7 @@ impl Task for DownloadPackageTask {
             let percentage = if size == 0 {
                 0.0
             } else {
-                (downloaded as f32) / (size as f32)
+                (downloaded as f64) / (size as f64)
             };
 
             // Pretty print data volumes

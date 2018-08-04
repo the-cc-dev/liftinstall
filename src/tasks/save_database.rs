@@ -12,7 +12,7 @@ impl Task for SaveDatabaseTask {
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f32),
+        messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 0);
         messenger("Saving application database...", 0.0);
@@ -27,6 +27,6 @@ impl Task for SaveDatabaseTask {
     }
 
     fn name(&self) -> String {
-        format!("SaveDatabaseTask")
+        "SaveDatabaseTask".to_string()
     }
 }

@@ -5,6 +5,7 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #![deny(unsafe_code)]
+#![deny(missing_docs)]
 
 #[cfg(windows)]
 extern crate nfd;
@@ -27,6 +28,7 @@ extern crate toml;
 extern crate regex;
 extern crate semver;
 
+extern crate dirs;
 extern crate zip;
 
 extern crate fern;
@@ -117,7 +119,7 @@ fn main() {
     for mut address in addresses {
         address.set_port(target_port);
 
-        let server = WebServer::with_addr(framework.clone(), address.clone())
+        let server = WebServer::with_addr(framework.clone(), address)
             .log_expect("Failed to bind to address");
 
         debug!("Server: {:?}", address);
@@ -163,7 +165,7 @@ fn main() {
                     let result =
                         wv.dialog(Dialog::ChooseDirectory, "Select a install directory...", "");
 
-                    if result.len() > 0 {
+                    if !result.is_empty() {
                         let result = serde_json::to_string(&result)
                             .log_expect("Unable to serialize response");
                         let command = format!("{}({});", callback_name, result);

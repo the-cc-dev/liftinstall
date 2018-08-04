@@ -21,9 +21,9 @@ impl Version {
     /// Coarses versions into semver versions. This will use a integer version as the major
     /// field if required.
     fn coarse_into_semver(&self) -> SemverVersion {
-        match self {
-            &Version::Semver(ref version) => version.to_owned(),
-            &Version::Integer(ref version) => {
+        match *self {
+            Version::Semver(ref version) => version.to_owned(),
+            Version::Integer(ref version) => {
                 SemverVersion::from((version.to_owned(), 0 as u64, 0 as u64))
             }
         }
@@ -42,13 +42,13 @@ impl Version {
 
 impl PartialOrd for Version {
     fn partial_cmp(&self, other: &Version) -> Option<Ordering> {
-        match self {
-            &Version::Semver(ref version) => match other {
-                &Version::Semver(ref other_version) => Some(version.cmp(other_version)),
+        match *self {
+            Version::Semver(ref version) => match *other {
+                Version::Semver(ref other_version) => Some(version.cmp(other_version)),
                 _ => None,
             },
-            &Version::Integer(ref num) => match other {
-                &Version::Integer(ref other_num) => Some(num.cmp(other_num)),
+            Version::Integer(ref num) => match *other {
+                Version::Integer(ref other_num) => Some(num.cmp(other_num)),
                 _ => None,
             },
         }

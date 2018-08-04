@@ -21,7 +21,7 @@ impl Task for SaveExecutableTask {
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f32),
+        messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 0);
         messenger("Copying installer binary...", 0.0);
@@ -64,10 +64,9 @@ impl Task for SaveExecutableTask {
             Err(v) => return Err(format!("Unable to open installer binary: {:?}", v)),
         };
 
-        match copy(&mut current_app_file, &mut new_app_file) {
-            Err(v) => return Err(format!("Unable to copy installer binary: {:?}", v)),
-            _ => {}
-        };
+        if let Err(v) = copy(&mut current_app_file, &mut new_app_file) {
+            return Err(format!("Unable to copy installer binary: {:?}", v));
+        }
 
         Ok(TaskParamType::None)
     }
@@ -77,6 +76,6 @@ impl Task for SaveExecutableTask {
     }
 
     fn name(&self) -> String {
-        format!("SaveExecutableTask")
+        "SaveExecutableTask".to_string()
     }
 }

@@ -19,7 +19,7 @@ impl Task for VerifyInstallDirTask {
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f32),
+        messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 0);
         messenger("Polling installation directory...", 0.0);
@@ -39,7 +39,7 @@ impl Task for VerifyInstallDirTask {
                 .map_err(|x| format!("Failed to read install destination: {:?}", x))?;
 
             if paths.count() != 0 {
-                return Err(format!("Install destination is not empty."));
+                return Err("Install destination is not empty.".to_string());
             }
         }
 

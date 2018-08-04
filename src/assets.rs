@@ -19,7 +19,7 @@ macro_rules! include_files_as_assets {
 ///
 /// file_path: String path, beginning with a /
 pub fn file_from_string(file_path: &str) -> Option<(String, &'static [u8])> {
-    let guessed_mime = match file_path.rfind(".") {
+    let guessed_mime = match file_path.rfind('.') {
         Some(ext_ptr) => {
             let ext = &file_path[ext_ptr + 1..];
 

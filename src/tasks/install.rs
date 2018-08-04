@@ -22,7 +22,7 @@ impl Task for InstallTask {
         &mut self,
         _: Vec<TaskParamType>,
         _: &mut InstallerFramework,
-        messenger: &Fn(&str, f32),
+        messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String> {
         messenger("Wrapping up...", 0.0);
         Ok(TaskParamType::None)
@@ -56,6 +56,6 @@ impl Task for InstallTask {
     }
 
     fn name(&self) -> String {
-        format!("InstallTask")
+        "InstallTask".to_string()
     }
 }

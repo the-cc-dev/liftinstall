@@ -22,12 +22,12 @@ impl Task for ResolvePackageTask {
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f32),
+        messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 0);
         let mut metadata: Option<PackageDescription> = None;
         for description in &context.config.packages {
-            if &self.name == &description.name {
+            if self.name == description.name {
                 metadata = Some(description.clone());
                 break;
             }
@@ -67,7 +67,7 @@ impl Task for ResolvePackageTask {
 
         let latest_result = match latest_result {
             Some(v) => v,
-            None => return Err(format!("No release with correct file found")),
+            None => return Err("No release with correct file found".to_string()),
         };
 
         let latest_version = latest_result.version.clone();
@@ -76,8 +76,7 @@ impl Task for ResolvePackageTask {
         let latest_file = latest_result
             .files
             .into_iter()
-            .filter(|x| regex.is_match(&x.name))
-            .next()
+            .find(|x| regex.is_match(&x.name))
             .log_expect("Searched file should have existed, but didn't");
 
         info!("Selected file: {:?}", latest_file);

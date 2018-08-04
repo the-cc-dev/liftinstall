@@ -29,7 +29,7 @@ impl Task for InstallPackageTask {
         &mut self,
         mut input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f32),
+        messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String> {
         messenger(&format!("Installing package {:?}...", self.name), 0.0);
 
@@ -42,7 +42,7 @@ impl Task for InstallPackageTask {
 
         let mut metadata: Option<PackageDescription> = None;
         for description in &context.config.packages {
-            if &self.name == &description.name {
+            if self.name == description.name {
                 metadata = Some(description.clone());
                 break;
             }
@@ -54,19 +54,18 @@ impl Task for InstallPackageTask {
         };
 
         // Check to see if no archive was available.
-        match input
+        if let TaskParamType::Break = input
             .pop()
             .log_expect("Should have input from uninstaller!")
         {
             // No file to install, but all is good.
-            TaskParamType::Break => return Ok(TaskParamType::None),
-            _ => {}
+            return Ok(TaskParamType::None);
         }
 
         let data = input.pop().log_expect("Should have input from resolver!");
         let (file, data) = match data {
             TaskParamType::FileContents(file, data) => (file, data),
-            _ => return Err(format!("Unexpected param type to install package")),
+            _ => return Err("Unexpected param type to install package".to_string()),
         };
 
         // TODO: Handle files other then zips
@@ -83,14 +82,14 @@ impl Task for InstallPackageTask {
 
             messenger(
                 &format!("Extracting {} ({} of {})", file.name(), i + 1, zip_size),
-                (i as f32) / (zip_size as f32),
+                (i as f64) / (zip_size as f64),
             );
 
             let filename = file.name().replace("\\", "/");
 
             // Ensure that parent directories exist
             let mut parent_dir = &filename[..];
-            while let Some(v) = parent_dir.rfind("/") {
+            while let Some(v) = parent_dir.rfind('/') {
                 parent_dir = &parent_dir[0..v + 1];
 
                 if !installed_files.contains(&parent_dir.to_string()) {
@@ -109,7 +108,7 @@ impl Task for InstallPackageTask {
             let target_path = path.join(&filename);
 
             // Check to make sure this isn't a directory
-            if filename.ends_with("/") || filename.ends_with("\\") {
+            if filename.ends_with('/') || filename.ends_with('\\') {
                 // Directory was already created
                 continue;
             }

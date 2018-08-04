@@ -22,7 +22,7 @@ impl Task for UninstallPackageTask {
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f32),
+        messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 0);
 
@@ -33,7 +33,7 @@ impl Task for UninstallPackageTask {
 
         let mut metadata: Option<LocalInstallation> = None;
         for i in 0..context.database.len() {
-            if &self.name == &context.database[i].name {
+            if self.name == context.database[i].name {
                 metadata = Some(context.database.remove(i));
                 break;
             }
@@ -59,15 +59,14 @@ impl Task for UninstallPackageTask {
         package.files.reverse();
 
         let max = package.files.len();
-        let mut i = 0;
-        for file in package.files {
+        for (i, file) in package.files.iter().enumerate() {
             let name = file.clone();
             let file = path.join(file);
             info!("Deleting {:?}", file);
 
             messenger(
                 &format!("Deleting {} ({} of {})", name, i + 1, max),
-                (i as f32) / (max as f32),
+                (i as f64) / (max as f64),
             );
 
             let result = if file.is_dir() {
@@ -76,12 +75,9 @@ impl Task for UninstallPackageTask {
                 remove_file(file)
             };
 
-            match result {
-                Err(v) => error!("Failed to delete file: {:?}", v),
-                _ => {}
+            if let Err(v) = result {
+                error!("Failed to delete file: {:?}", v);
             }
-
-            i += 1;
         }
 
         Ok(TaskParamType::None)

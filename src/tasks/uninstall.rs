@@ -17,7 +17,7 @@ impl Task for UninstallTask {
         &mut self,
         _: Vec<TaskParamType>,
         _: &mut InstallerFramework,
-        messenger: &Fn(&str, f32),
+        messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String> {
         messenger("Wrapping up...", 0.0);
         Ok(TaskParamType::None)
@@ -39,6 +39,6 @@ impl Task for UninstallTask {
     }
 
     fn name(&self) -> String {
-        format!("UninstallTask")
+        "UninstallTask".to_string()
     }
 }

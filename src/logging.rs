@@ -17,8 +17,7 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
                 record.level(),
                 message
             ))
-        })
-        .level(log::LevelFilter::Info)
+        }).level(log::LevelFilter::Info)
         .chain(io::stdout())
         .chain(fern::log_file("installer.log")?)
         .apply()?;
@@ -32,13 +31,11 @@ where
     Self: Sized,
 {
     /// Unwraps this object. See `unwrap()`.
-    #[inline]
     fn log_unwrap(self) -> T {
         self.log_expect("Failed to unwrap")
     }
 
     /// Unwraps this object, with a specified error message on failure. See `expect()`.
-    #[inline]
     fn log_expect(self, msg: &str) -> T;
 }
 

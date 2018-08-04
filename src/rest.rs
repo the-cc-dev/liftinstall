@@ -54,8 +54,7 @@ impl WebServer {
                     Ok(WebService {
                         framework: framework.clone(),
                     })
-                })
-                .log_expect("Failed to bind to port");
+                }).log_expect("Failed to bind to port");
 
             server.run().log_expect("Failed to run HTTP server");
         });
@@ -172,25 +171,16 @@ impl Service for WebService {
                             .write()
                             .log_expect("InstallerFramework has been dirtied");
 
-                        match framework.uninstall(&sender) {
-                            Err(v) => {
-                                error!("Uninstall error occurred: {:?}", v);
-                                match sender.send(InstallMessage::Error(v)) {
-                                    Err(v) => {
-                                        error!("Failed to send uninstall error: {:?}", v);
-                                    }
-                                    _ => {}
-                                };
-                            }
-                            _ => {}
+                        if let Err(v) = framework.uninstall(&sender) {
+                            error!("Uninstall error occurred: {:?}", v);
+                            if let Err(v) = sender.send(InstallMessage::Error(v)) {
+                                error!("Failed to send uninstall error: {:?}", v);
+                            };
                         }
 
-                        match sender.send(InstallMessage::EOF) {
-                            Err(v) => {
-                                error!("Failed to send EOF to client: {:?}", v);
-                            }
-                            _ => {}
-                        };
+                        if let Err(v) = sender.send(InstallMessage::EOF) {
+                            error!("Failed to send EOF to client: {:?}", v);
+                        }
                     });
 
                     // Spawn a thread for transforming messages to chunk messages
@@ -201,9 +191,8 @@ impl Service for WebService {
                                 .recv()
                                 .log_expect("Failed to recieve message from runner thread");
 
-                            match &response {
-                                &InstallMessage::EOF => break,
-                                _ => {}
+                            if let InstallMessage::EOF = response {
+                                break;
                             }
 
                             let mut response = serde_json::to_string(&response)
@@ -236,7 +225,7 @@ impl Service for WebService {
                     let mut path: Option<String> = None;
 
                     // Transform results into just an array of stuff to install
-                    for (key, value) in results.iter() {
+                    for (key, value) in &results {
                         if key == "path" {
                             path = Some(value.to_owned());
                             continue;
@@ -266,25 +255,16 @@ impl Service for WebService {
                             framework.set_install_dir(&path);
                         }
 
-                        match framework.install(to_install, &sender, new_install) {
-                            Err(v) => {
-                                error!("Uninstall error occurred: {:?}", v);
-                                match sender.send(InstallMessage::Error(v)) {
-                                    Err(v) => {
-                                        error!("Failed to send uninstall error: {:?}", v);
-                                    }
-                                    _ => {}
-                                };
+                        if let Err(v) = framework.install(to_install, &sender, new_install) {
+                            error!("Uninstall error occurred: {:?}", v);
+                            if let Err(v) = sender.send(InstallMessage::Error(v)) {
+                                error!("Failed to send uninstall error: {:?}", v);
                             }
-                            _ => {}
                         }
 
-                        match sender.send(InstallMessage::EOF) {
-                            Err(v) => {
-                                error!("Failed to send EOF to client: {:?}", v);
-                            }
-                            _ => {}
-                        };
+                        if let Err(v) = sender.send(InstallMessage::EOF) {
+                            error!("Failed to send EOF to client: {:?}", v);
+                        }
                     });
 
                     // Spawn a thread for transforming messages to chunk messages
@@ -295,9 +275,8 @@ impl Service for WebService {
                                 .recv()
                                 .log_expect("Failed to recieve message from runner thread");
 
-                            match &response {
-                                &InstallMessage::EOF => break,
-                                _ => {}
+                            if let InstallMessage::EOF = response {
+                                break;
                             }
 
                             let mut response = serde_json::to_string(&response)
@@ -322,7 +301,7 @@ impl Service for WebService {
                 // At this point, we have a web browser client. Search for a index page
                 // if needed
                 let mut path: String = req.path().to_owned();
-                if path.ends_with("/") {
+                if path.ends_with('/') {
                     path += "index.html";
                 }
 

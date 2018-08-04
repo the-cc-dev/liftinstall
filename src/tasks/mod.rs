@@ -39,7 +39,7 @@ pub trait Task {
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f32),
+        messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String>;
 
     /// Returns a vector containing all dependencies that need to be executed
@@ -84,25 +84,25 @@ impl DependencyTree {
     pub fn execute(
         &mut self,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f32),
+        messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String> {
-        let total_tasks = (self.dependencies.len() + 1) as f32;
+        let total_tasks = (self.dependencies.len() + 1) as f64;
 
         let mut inputs = Vec::<TaskParamType>::with_capacity(self.dependencies.len());
 
         let mut count = 0;
 
         for i in &mut self.dependencies {
-            let result = i.execute(context, &|msg: &str, progress: f32| {
+            let result = i.execute(context, &|msg: &str, progress: f64| {
                 messenger(
                     msg,
-                    progress / total_tasks + (1.0 / total_tasks) * count as f32,
+                    progress / total_tasks + (1.0 / total_tasks) * f64::from(count),
                 )
             })?;
 
             // Check to see if we skip matching other dependencies
             let do_break = match &result {
-                &TaskParamType::Break => true,
+                TaskParamType::Break => true,
                 _ => false,
             };
 
@@ -115,10 +115,10 @@ impl DependencyTree {
         }
 
         self.task
-            .execute(inputs, context, &|msg: &str, progress: f32| {
+            .execute(inputs, context, &|msg: &str, progress: f64| {
                 messenger(
                     msg,
-                    progress / total_tasks + (1.0 / total_tasks) * count as f32,
+                    progress / total_tasks + (1.0 / total_tasks) * f64::from(count),
                 )
             })
     }

@@ -2,6 +2,12 @@ extern crate walkdir;
 #[cfg(windows)]
 extern crate winres;
 
+#[cfg(windows)]
+extern crate bindgen;
+
+#[cfg(windows)]
+extern crate cc;
+
 use walkdir::WalkDir;
 
 use std::env;
@@ -24,6 +30,21 @@ fn handle_binary() {
     let mut res = winres::WindowsResource::new();
     res.set_icon("static/favicon.ico");
     res.compile().expect("Failed to generate metadata");
+
+    let bindings = bindgen::Builder::default()
+        .header("src/native/interop.h")
+        .generate()
+        .expect("Unable to generate bindings");
+
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    bindings
+        .write_to_file(out_path.join("interop.rs"))
+        .expect("Couldn't write bindings!");
+
+    cc::Build::new()
+        .cpp(true)
+        .file("src/native/interop.cpp")
+        .compile("interop");
 }
 
 #[cfg(not(windows))]

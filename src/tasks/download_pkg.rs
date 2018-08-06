@@ -3,6 +3,8 @@
 use installer::InstallerFramework;
 
 use tasks::Task;
+use tasks::TaskDependency;
+use tasks::TaskOrdering;
 use tasks::TaskParamType;
 
 use tasks::resolver::ResolvePackageTask;
@@ -83,10 +85,13 @@ impl Task for DownloadPackageTask {
         Ok(TaskParamType::FileContents(version, file, data_storage))
     }
 
-    fn dependencies(&self) -> Vec<Box<Task>> {
-        vec![Box::new(ResolvePackageTask {
-            name: self.name.clone(),
-        })]
+    fn dependencies(&self) -> Vec<TaskDependency> {
+        vec![TaskDependency::build(
+            TaskOrdering::Pre,
+            Box::new(ResolvePackageTask {
+                name: self.name.clone(),
+            }),
+        )]
     }
 
     fn name(&self) -> String {

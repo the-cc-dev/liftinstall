@@ -2,10 +2,8 @@
 
 use installer::InstallerFramework;
 
-use tasks::save_database::SaveDatabaseTask;
 use tasks::Task;
 use tasks::TaskDependency;
-use tasks::TaskOrdering;
 use tasks::TaskParamType;
 
 use installer::LocalInstallation;
@@ -14,21 +12,20 @@ use std::fs::remove_dir;
 use std::fs::remove_file;
 
 use logging::LoggingErrors;
-use tasks::uninstall_shortcuts::UninstallShortcutsTask;
 
-pub struct UninstallPackageTask {
+pub struct UninstallShortcutsTask {
     pub name: String,
     pub optional: bool,
 }
 
-impl Task for UninstallPackageTask {
+impl Task for UninstallShortcutsTask {
     fn execute(
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
         messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String> {
-        assert_eq!(input.len(), 1);
+        assert_eq!(input.len(), 0);
 
         let path = context
             .install_path
@@ -38,7 +35,7 @@ impl Task for UninstallPackageTask {
         let mut metadata: Option<LocalInstallation> = None;
         for i in 0..context.database.len() {
             if self.name == context.database[i].name {
-                metadata = Some(context.database.remove(i));
+                metadata = Some(context.database[i].clone());
                 break;
             }
         }
@@ -57,13 +54,16 @@ impl Task for UninstallPackageTask {
             }
         };
 
-        messenger(&format!("Uninstalling package {:?}...", self.name), 0.0);
+        messenger(
+            &format!("Uninstalling shortcuts for package {:?}...", self.name),
+            0.0,
+        );
 
         // Reverse, as to delete directories last
         package.files.reverse();
 
         let max = package.files.len();
-        for (i, file) in package.files.iter().enumerate() {
+        for (i, file) in package.shortcuts.iter().enumerate() {
             let name = file.clone();
             let file = path.join(file);
             info!("Deleting {:?}", file);
@@ -88,21 +88,12 @@ impl Task for UninstallPackageTask {
     }
 
     fn dependencies(&self) -> Vec<TaskDependency> {
-        vec![
-            TaskDependency::build(
-                TaskOrdering::Pre,
-                Box::new(UninstallShortcutsTask {
-                    name: self.name.clone(),
-                    optional: self.optional,
-                }),
-            ),
-            TaskDependency::build(TaskOrdering::Post, Box::new(SaveDatabaseTask {})),
-        ]
+        vec![]
     }
 
     fn name(&self) -> String {
         format!(
-            "UninstallPackageTask (for {:?}, optional = {})",
+            "UninstallShortcutsTask (for {:?}, optional = {})",
             self.name, self.optional
         )
     }

@@ -3,6 +3,7 @@
 use installer::InstallerFramework;
 
 use tasks::Task;
+use tasks::TaskDependency;
 use tasks::TaskParamType;
 
 use std::fs::create_dir_all;
@@ -46,7 +47,7 @@ impl Task for VerifyInstallDirTask {
         Ok(TaskParamType::None)
     }
 
-    fn dependencies(&self) -> Vec<Box<Task>> {
+    fn dependencies(&self) -> Vec<TaskDependency> {
         vec![]
     }
 

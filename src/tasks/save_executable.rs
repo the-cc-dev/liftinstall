@@ -3,6 +3,7 @@
 use installer::InstallerFramework;
 
 use tasks::Task;
+use tasks::TaskDependency;
 use tasks::TaskParamType;
 
 use std::fs::File;
@@ -71,7 +72,7 @@ impl Task for SaveExecutableTask {
         Ok(TaskParamType::None)
     }
 
-    fn dependencies(&self) -> Vec<Box<Task>> {
+    fn dependencies(&self) -> Vec<TaskDependency> {
         vec![]
     }
 

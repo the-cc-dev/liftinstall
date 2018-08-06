@@ -47,6 +47,7 @@ mod config;
 mod http;
 mod installer;
 mod logging;
+mod native;
 mod rest;
 mod sources;
 mod tasks;

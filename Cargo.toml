@@ -51,3 +51,5 @@ nfd = "0.0.4"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
+bindgen = "0.26.3"
+cc = "1.0"

@@ -26,6 +26,8 @@ use logging::LoggingErrors;
 
 use dirs::home_dir;
 
+use std::fs::remove_file;
+
 /// A message thrown during the installation of packages.
 #[derive(Serialize)]
 pub enum InstallMessage {
@@ -61,7 +63,10 @@ pub struct InstallationStatus {
 pub struct LocalInstallation {
     pub name: String,
     pub version: Version,
+    /// Relative paths to generated files
     pub files: Vec<String>,
+    /// Absolute paths to generated shortcut files
+    pub shortcuts: Vec<String>,
 }
 
 impl InstallerFramework {
@@ -148,7 +153,20 @@ impl InstallerFramework {
             if let Err(v) = messages.send(InstallMessage::Status(msg.to_string(), progress as _)) {
                 error!("Failed to submit queue message: {:?}", v);
             }
-        }).map(|_x| ())
+        }).map(|_x| ())?;
+
+        // Delete the metadata file
+        let path = self
+            .install_path
+            .as_ref()
+            .log_expect("No install path specified");
+
+        remove_file(path.join("metadata.json"))
+            .map_err(|x| format!("Failed to delete metadata: {:?}", x))?;
+
+        // Logging will have to be done later
+
+        Ok(())
     }
 
     /// Saves the applications database.

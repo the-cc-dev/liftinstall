@@ -2,7 +2,13 @@
 
 use installer::InstallerFramework;
 
+use tasks::download_pkg::DownloadPackageTask;
+use tasks::install_shortcuts::InstallShortcutsTask;
+use tasks::save_database::SaveDatabaseTask;
+use tasks::uninstall_pkg::UninstallPackageTask;
 use tasks::Task;
+use tasks::TaskDependency;
+use tasks::TaskOrdering;
 use tasks::TaskParamType;
 
 use config::PackageDescription;
@@ -10,9 +16,6 @@ use installer::LocalInstallation;
 
 use std::fs::create_dir_all;
 use std::io::copy;
-
-use tasks::download_pkg::DownloadPackageTask;
-use tasks::uninstall_pkg::UninstallPackageTask;
 
 use logging::LoggingErrors;
 
@@ -59,19 +62,23 @@ impl Task for InstallPackageTask {
             None => return Err(format!("Package {:?} could not be found.", self.name)),
         };
 
-        // Check to see if no archive was available.
-        if let TaskParamType::Break = input
-            .pop()
-            .log_expect("Should have input from uninstaller!")
-        {
-            // No file to install, but all is good.
-            return Ok(TaskParamType::None);
-        }
+        // Grab data from the shortcut generator
+        let shortcuts = input.pop().log_expect("Should have input from resolver!");
+        let shortcuts = match shortcuts {
+            TaskParamType::GeneratedShortcuts(files) => files,
+            // If the resolver returned early, we need to unwind
+            TaskParamType::Break => return Ok(TaskParamType::None),
+            _ => return Err("Unexpected shortcuts param type to install package".to_string()),
+        };
 
+        // Ignore input from the uninstaller - no useful information passed
+        input.pop();
+
+        // Grab data from the resolver
         let data = input.pop().log_expect("Should have input from resolver!");
         let (version, file, data) = match data {
             TaskParamType::FileContents(version, file, data) => (version, file, data),
-            _ => return Err("Unexpected param type to install package".to_string()),
+            _ => return Err("Unexpected file contents param type to install package".to_string()),
         };
 
         let mut archive = archives::read_archive(&file.name, data.as_slice())?;
@@ -159,21 +166,35 @@ impl Task for InstallPackageTask {
         context.database.push(LocalInstallation {
             name: package.name.to_owned(),
             version,
+            shortcuts,
             files: installed_files,
         });
 
         Ok(TaskParamType::None)
     }
 
-    fn dependencies(&self) -> Vec<Box<Task>> {
+    fn dependencies(&self) -> Vec<TaskDependency> {
         vec![
-            Box::new(DownloadPackageTask {
-                name: self.name.clone(),
-            }),
-            Box::new(UninstallPackageTask {
-                name: self.name.clone(),
-                optional: true,
-            }),
+            TaskDependency::build(
+                TaskOrdering::Pre,
+                Box::new(DownloadPackageTask {
+                    name: self.name.clone(),
+                }),
+            ),
+            TaskDependency::build(
+                TaskOrdering::Pre,
+                Box::new(UninstallPackageTask {
+                    name: self.name.clone(),
+                    optional: true,
+                }),
+            ),
+            TaskDependency::build(
+                TaskOrdering::Pre,
+                Box::new(InstallShortcutsTask {
+                    name: self.name.clone(),
+                }),
+            ),
+            TaskDependency::build(TaskOrdering::Post, Box::new(SaveDatabaseTask {})),
         ]
     }
 

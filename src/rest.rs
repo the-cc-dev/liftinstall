@@ -338,9 +338,17 @@ impl Service for WebService {
                     thread::spawn(move || {
                         let mut tx = tx;
                         loop {
-                            let response = receiver
-                                .recv()
-                                .log_expect("Failed to receive message from runner thread");
+                            let mut panic_after_finish = false;
+
+                            let response = match receiver
+                                .recv() {
+                                Ok(v) => v,
+                                Err(v) => {
+                                    error!("Queue message failed: {:?}", v);
+                                    panic_after_finish = true;
+                                    InstallMessage::Error("Internal error".to_string())
+                                }
+                            };
 
                             if let InstallMessage::EOF = response {
                                 break;
@@ -353,6 +361,10 @@ impl Service for WebService {
                                 .send(Ok(response.into_bytes().into()))
                                 .wait()
                                 .log_expect("Failed to write JSON response payload to client");
+
+                            if panic_after_finish {
+                                panic!("Failed to read from queue (flushed error message successfully)");
+                            }
                         }
                     });
 

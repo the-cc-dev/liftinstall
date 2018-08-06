@@ -13,11 +13,13 @@ pub mod download_pkg;
 pub mod install;
 pub mod install_dir;
 pub mod install_pkg;
+pub mod install_shortcuts;
 pub mod resolver;
 pub mod save_database;
 pub mod save_executable;
 pub mod uninstall;
 pub mod uninstall_pkg;
+pub mod uninstall_shortcuts;
 
 /// An abstraction over the various parameters that can be passed around.
 pub enum TaskParamType {
@@ -26,8 +28,32 @@ pub enum TaskParamType {
     File(Version, File),
     /// Downloaded contents of a file
     FileContents(Version, File, Vec<u8>),
+    /// List of shortcuts that have been generated
+    GeneratedShortcuts(Vec<String>),
     /// Tells the runtime to break parsing other dependencies
     Break,
+}
+
+/// Specifies the relative ordering of a dependency with it's parent.
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+pub enum TaskOrdering {
+    /// This task should occur before the main process
+    Pre,
+    /// This task should occur after the main process. These have their results discarded.
+    Post,
+}
+
+/// A dependency of a task with various properties.
+pub struct TaskDependency {
+    ordering: TaskOrdering,
+    task: Box<Task>,
+}
+
+impl TaskDependency {
+    /// Builds a new dependency from the specified task.
+    pub fn build(ordering: TaskOrdering, task: Box<Task>) -> TaskDependency {
+        TaskDependency { ordering, task }
+    }
 }
 
 /// A Task is a small, async task conforming to a fixed set of inputs/outputs.
@@ -44,7 +70,7 @@ pub trait Task {
 
     /// Returns a vector containing all dependencies that need to be executed
     /// before this task can function.
-    fn dependencies(&self) -> Vec<Box<Task>>;
+    fn dependencies(&self) -> Vec<TaskDependency>;
 
     /// Returns a short name used for formatting the dependency tree.
     fn name(&self) -> String;
@@ -53,7 +79,7 @@ pub trait Task {
 /// The dependency tree allows for smart iteration on a Task struct.
 pub struct DependencyTree {
     task: Box<Task>,
-    dependencies: Vec<DependencyTree>,
+    dependencies: Vec<(TaskOrdering, DependencyTree)>,
 }
 
 impl DependencyTree {
@@ -64,8 +90,9 @@ impl DependencyTree {
         buf += "\n";
 
         for i in 0..self.dependencies.len() {
-            let dependencies = self.dependencies[i].render();
-            let dependencies = dependencies.trim();
+            let (order, dependency) = &(self.dependencies[i]);
+            let dependencies = dependency.render();
+            let dependencies = format!("{:?} {}", order, dependencies.trim());
 
             if i + 1 == self.dependencies.len() {
                 buf += "└── ";
@@ -92,7 +119,11 @@ impl DependencyTree {
 
         let mut count = 0;
 
-        for i in &mut self.dependencies {
+        for (ordering, i) in &mut self.dependencies {
+            if ordering != &TaskOrdering::Pre {
+                continue;
+            }
+
             let result = i.execute(context, &|msg: &str, progress: f64| {
                 messenger(
                     msg,
@@ -114,13 +145,46 @@ impl DependencyTree {
             }
         }
 
-        self.task
+        let task_result = self
+            .task
             .execute(inputs, context, &|msg: &str, progress: f64| {
                 messenger(
                     msg,
                     progress / total_tasks + (1.0 / total_tasks) * f64::from(count),
                 )
-            })
+            })?;
+
+        if let TaskParamType::Break = task_result {
+            // We are done here
+            return Ok(TaskParamType::Break);
+        }
+
+        for (ordering, i) in &mut self.dependencies {
+            if ordering != &TaskOrdering::Post {
+                continue;
+            }
+
+            let result = i.execute(context, &|msg: &str, progress: f64| {
+                messenger(
+                    msg,
+                    progress / total_tasks + (1.0 / total_tasks) * f64::from(count),
+                )
+            })?;
+
+            // Check to see if we skip matching other dependencies
+            let do_break = match &result {
+                TaskParamType::Break => true,
+                _ => false,
+            };
+
+            count += 1;
+
+            if do_break {
+                break;
+            }
+        }
+
+        Ok(task_result)
     }
 
     /// Builds a new pipeline from the specified task, iterating on dependencies.
@@ -128,7 +192,7 @@ impl DependencyTree {
         let dependencies = task
             .dependencies()
             .into_iter()
-            .map(|x| DependencyTree::build(x))
+            .map(|x| (x.ordering, DependencyTree::build(x.task)))
             .collect();
 
         DependencyTree { task, dependencies }

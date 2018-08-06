@@ -5,6 +5,7 @@ use std::env::consts::OS;
 use installer::InstallerFramework;
 
 use tasks::Task;
+use tasks::TaskDependency;
 use tasks::TaskParamType;
 
 use config::PackageDescription;
@@ -89,7 +90,7 @@ impl Task for ResolvePackageTask {
         Ok(TaskParamType::File(latest_version, latest_file))
     }
 
-    fn dependencies(&self) -> Vec<Box<Task>> {
+    fn dependencies(&self) -> Vec<TaskDependency> {
         vec![]
     }
 

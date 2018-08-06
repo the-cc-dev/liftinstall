@@ -19,6 +19,14 @@ pub struct PackageSource {
     pub config: toml::Value,
 }
 
+/// Describes if/how a shortcut should be built for a package.
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct PackageShortcut {
+    pub name: String,
+    pub relative_path: String,
+    pub description: String,
+}
+
 /// Describes a overview of a individual package.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct PackageDescription {
@@ -26,6 +34,8 @@ pub struct PackageDescription {
     pub description: String,
     pub default: Option<bool>,
     pub source: PackageSource,
+    #[serde(default)]
+    pub shortcuts: Vec<PackageShortcut>,
 }
 
 /// Describes the application itself.

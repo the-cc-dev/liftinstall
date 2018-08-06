@@ -4,11 +4,12 @@ use installer::InstallerFramework;
 
 use tasks::install_dir::VerifyInstallDirTask;
 use tasks::install_pkg::InstallPackageTask;
-use tasks::save_database::SaveDatabaseTask;
 use tasks::save_executable::SaveExecutableTask;
 use tasks::uninstall_pkg::UninstallPackageTask;
 
 use tasks::Task;
+use tasks::TaskDependency;
+use tasks::TaskOrdering;
 use tasks::TaskParamType;
 
 pub struct InstallTask {
@@ -28,28 +29,38 @@ impl Task for InstallTask {
         Ok(TaskParamType::None)
     }
 
-    fn dependencies(&self) -> Vec<Box<Task>> {
-        let mut elements = Vec::<Box<Task>>::new();
+    fn dependencies(&self) -> Vec<TaskDependency> {
+        let mut elements = Vec::new();
 
-        elements.push(Box::new(VerifyInstallDirTask {
-            clean_install: self.fresh_install,
-        }));
+        elements.push(TaskDependency::build(
+            TaskOrdering::Pre,
+            Box::new(VerifyInstallDirTask {
+                clean_install: self.fresh_install,
+            }),
+        ));
 
         for item in &self.items {
-            elements.push(Box::new(InstallPackageTask { name: item.clone() }));
+            elements.push(TaskDependency::build(
+                TaskOrdering::Pre,
+                Box::new(InstallPackageTask { name: item.clone() }),
+            ));
         }
 
         for item in &self.uninstall_items {
-            elements.push(Box::new(UninstallPackageTask {
-                name: item.clone(),
-                optional: false,
-            }));
+            elements.push(TaskDependency::build(
+                TaskOrdering::Pre,
+                Box::new(UninstallPackageTask {
+                    name: item.clone(),
+                    optional: false,
+                }),
+            ));
         }
 
-        elements.push(Box::new(SaveDatabaseTask {}));
-
         if self.fresh_install {
-            elements.push(Box::new(SaveExecutableTask {}));
+            elements.push(TaskDependency::build(
+                TaskOrdering::Pre,
+                Box::new(SaveExecutableTask {}),
+            ));
         }
 
         elements

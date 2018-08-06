@@ -3,6 +3,7 @@
 use installer::InstallerFramework;
 
 use tasks::Task;
+use tasks::TaskDependency;
 use tasks::TaskParamType;
 
 pub struct SaveDatabaseTask {}
@@ -22,7 +23,7 @@ impl Task for SaveDatabaseTask {
         Ok(TaskParamType::None)
     }
 
-    fn dependencies(&self) -> Vec<Box<Task>> {
+    fn dependencies(&self) -> Vec<TaskDependency> {
         vec![]
     }
 

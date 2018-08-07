@@ -4,14 +4,22 @@
 
 use hyper::header::ContentLength;
 
-use reqwest;
-
 use std::io::Read;
+use std::time::Duration;
+
+use reqwest::Client;
+
+/// Builds a customised HTTP client.
+pub fn build_client() -> Result<Client, String> {
+    Client::builder()
+        .timeout(Duration::from_secs(5))
+        .build()
+        .map_err(|x| format!("Unable to build cient: {:?}", x))
+}
 
 /// Downloads a text file from the specified URL.
 pub fn download_text(url: &str) -> Result<String, String> {
-    // TODO: Decrease check time
-    let mut client = match reqwest::get(url) {
+    let mut client = match build_client()?.get(url).send() {
         Ok(v) => v,
         Err(v) => return Err(format!("Failed to GET resource: {:?}", v)),
     };
@@ -26,8 +34,7 @@ pub fn stream_file<F>(url: &str, mut callback: F) -> Result<(), String>
 where
     F: FnMut(Vec<u8>, u64) -> (),
 {
-    // TODO: Decrease check time
-    let mut client = match reqwest::get(url) {
+    let mut client = match build_client()?.get(url).send() {
         Ok(v) => v,
         Err(v) => return Err(format!("Failed to GET resource: {:?}", v)),
     };

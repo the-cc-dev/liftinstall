@@ -2,13 +2,14 @@
 //!
 //! Contains the Github API implementation of a release source.
 
-use reqwest;
 use reqwest::header::UserAgent;
 use reqwest::StatusCode;
 
 use serde_json;
 
 use sources::types::*;
+
+use http::build_client;
 
 pub struct GithubReleases {}
 
@@ -35,7 +36,7 @@ impl ReleaseSource for GithubReleases {
         let mut results: Vec<Release> = Vec::new();
 
         // Build the HTTP client up
-        let client = reqwest::Client::new();
+        let client = build_client()?;
         let mut response = client
             .get(&format!(
                 "https://api.github.com/repos/{}/releases",

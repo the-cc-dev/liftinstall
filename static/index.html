@@ -252,7 +252,7 @@
                             }
 
                             if (e.is_launcher) {
-                                document.getElementById("window-title").innerText = config.name + " Updater";
+                                document.getElementById("window-title").innerText = app.attrs.name + " Updater";
 
                                 app.is_launcher = true;
                                 app.install();

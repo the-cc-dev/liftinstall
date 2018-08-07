@@ -26,7 +26,7 @@ function ajax(path, successCallback, failCallback, data) {
         if (this.status === 200 && this.getResponseHeader('Content-Type').indexOf("application/json") !== -1) {
             successCallback(JSON.parse(this.responseText));
         } else {
-            failCallback();
+            failCallback(this.responseText);
         }
     });
     req.addEventListener("error", failCallback);
@@ -69,7 +69,7 @@ function stream_ajax(path, callback, successCallback, failCallback, data) {
         if (this.status === 200) {
             successCallback(this.responseText);
         } else {
-            failCallback();
+            failCallback(this.responseText);
         }
     });
 

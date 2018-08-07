@@ -13,6 +13,7 @@ use std::path::PathBuf;
 
 use std::sync::mpsc::Sender;
 
+use config::BaseAttributes;
 use config::Config;
 
 use sources::types::Version;
@@ -36,7 +37,8 @@ pub enum InstallMessage {
 /// The installer framework contains metadata about packages, what is installable, what isn't,
 /// etc.
 pub struct InstallerFramework {
-    pub config: Config,
+    pub base_attributes: BaseAttributes,
+    pub config: Option<Config>,
     pub database: Vec<LocalInstallation>,
     pub install_path: Option<PathBuf>,
     pub preexisting_install: bool,
@@ -64,13 +66,13 @@ pub struct LocalInstallation {
 
 impl InstallerFramework {
     /// Returns a copy of the configuration.
-    pub fn get_config(&self) -> Config {
+    pub fn get_config(&self) -> Option<Config> {
         self.config.clone()
     }
 
     /// Returns the default install path.
     pub fn get_default_path(&self) -> Option<String> {
-        let app_name = &self.config.general.name;
+        let app_name = &self.base_attributes.name;
 
         let base_dir = match var("LOCALAPPDATA") {
             Ok(path) => PathBuf::from(path),
@@ -194,9 +196,10 @@ impl InstallerFramework {
     }
 
     /// Creates a new instance of the Installer Framework with a specified Config.
-    pub fn new(config: Config) -> Self {
+    pub fn new(attrs: BaseAttributes) -> Self {
         InstallerFramework {
-            config,
+            base_attributes: attrs,
+            config: None,
             database: Vec::new(),
             install_path: None,
             preexisting_install: false,
@@ -207,7 +210,7 @@ impl InstallerFramework {
 
     /// Creates a new instance of the Installer Framework with a specified Config, managing
     /// a pre-existing installation.
-    pub fn new_with_db(config: Config, install_path: &Path) -> Result<Self, String> {
+    pub fn new_with_db(attrs: BaseAttributes, install_path: &Path) -> Result<Self, String> {
         let path = install_path.to_owned();
         let metadata_path = path.join("metadata.json");
         let metadata_file = match File::open(metadata_path) {
@@ -221,7 +224,8 @@ impl InstallerFramework {
         };
 
         Ok(InstallerFramework {
-            config,
+            base_attributes: attrs,
+            config: None,
             database,
             install_path: Some(path),
             preexisting_install: true,

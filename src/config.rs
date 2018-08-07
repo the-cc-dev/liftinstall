@@ -30,14 +30,26 @@ pub struct PackageDescription {
 
 /// Describes the application itself.
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct GeneralConfig {
+pub struct BaseAttributes {
     pub name: String,
-    pub installing_message: String,
+    pub target_url: String,
+}
+
+impl BaseAttributes {
+    /// Serialises as a JSON string.
+    pub fn to_json_str(&self) -> Result<String, SerdeError> {
+        serde_json::to_string(self)
+    }
+
+    /// Builds a configuration from a specified TOML string.
+    pub fn from_toml_str(contents: &str) -> Result<Self, TomlError> {
+        toml::from_str(contents)
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
-    pub general: GeneralConfig,
+    pub installing_message: String,
     pub packages: Vec<PackageDescription>,
 }
 

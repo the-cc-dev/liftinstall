@@ -36,6 +36,11 @@ pub fn file_from_string(file_path: &str) -> Option<(String, &'static [u8])> {
         "/favicon.ico",
         "/css/bulma.min.css",
         "/css/main.css",
+        "/fonts/roboto-v18-latin-regular.eot",
+        "/fonts/roboto-v18-latin-regular.svg",
+        "/fonts/roboto-v18-latin-regular.ttf",
+        "/fonts/roboto-v18-latin-regular.woff",
+        "/fonts/roboto-v18-latin-regular.woff2",
         "/js/helpers.js",
         "/js/vue.min.js"
     )?;

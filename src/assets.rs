@@ -40,9 +40,7 @@ pub fn file_from_string(file_path: &str) -> Option<(String, &'static [u8])> {
         "/fonts/roboto-v18-latin-regular.woff",
         "/fonts/roboto-v18-latin-regular.woff2",
         "/js/vue.min.js",
-        "/js/vue.js",
         "/js/vue-router.min.js",
-        "/js/vue-router.js",
         "/js/helpers.js",
         "/js/views.js",
         "/js/main.js"

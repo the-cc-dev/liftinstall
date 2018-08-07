@@ -40,8 +40,7 @@ impl ReleaseSource for GithubReleases {
             .get(&format!(
                 "https://api.github.com/repos/{}/releases",
                 config.repo
-            ))
-            .header(UserAgent::new("liftinstall (j-selby)"))
+            )).header(UserAgent::new("liftinstall (j-selby)"))
             .send()
             .map_err(|x| format!("Error while sending HTTP request: {:?}", x))?;
 
@@ -53,8 +52,8 @@ impl ReleaseSource for GithubReleases {
             .text()
             .map_err(|x| format!("Failed to decode HTTP response body: {:?}", x))?;
 
-        let result: serde_json::Value =
-            serde_json::from_str(&body).map_err(|x| format!("Failed to parse response: {:?}", x))?;
+        let result: serde_json::Value = serde_json::from_str(&body)
+            .map_err(|x| format!("Failed to parse response: {:?}", x))?;
 
         let result: &Vec<serde_json::Value> = result
             .as_array()

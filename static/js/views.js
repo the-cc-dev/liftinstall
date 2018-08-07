@@ -1,6 +1,6 @@
 const DownloadConfig = {
     template: `
-        <div class="column">
+        <div class="column has-padding">
             <h4 class="subtitle">Downloading config...</h4>
 
             <br />
@@ -14,19 +14,23 @@ const DownloadConfig = {
     },
     methods: {
         download_install_status: function() {
-            ajax("/api/installation-status", (e) => {
+            var that = this; // IE workaround
+
+            ajax("/api/installation-status", function(e) {
                 app.metadata = e;
 
-                this.download_config();
+                that.download_config();
             });
         },
         download_config: function() {
-            ajax("/api/config", (e) => {
+            var that = this; // IE workaround
+
+            ajax("/api/config", function(e) {
                 app.config = e;
 
-                this.choose_next_state();
+                that.choose_next_state();
 
-            }, (e) => {
+            }, function(e) {
                 console.error("Got error while downloading config: "
                     + e);
 
@@ -71,7 +75,7 @@ const DownloadConfig = {
 
                 // Need to do a bit more digging to get at the
                 // install location.
-                ajax("/api/default-path", (e) => {
+                ajax("/api/default-path", function(e) {
                     if (e.path != null) {
                         app.install_location = e.path;
                     }
@@ -79,30 +83,13 @@ const DownloadConfig = {
 
                 router.replace("/packages");
             }
-
-            /*app.is_downloading_config = false;
-            if (e.preexisting_install) {
-                app.modify_install = true;
-                app.select_packages = false;
-                app.show_install_location = false;
-                app.install_location = e.install_path;
-
-
-
-                if (e.is_launcher) {
-
-                    app.is_launcher = true;
-                    app.install();
-                }
-            } else {
-            }*/
         }
     }
 };
 
 const SelectPackages = {
     template: `
-        <div class="column">
+        <div class="column has-padding">
             <h4 class="subtitle">Select your preferred settings:</h4>
 
             <!-- Build options -->
@@ -130,13 +117,18 @@ const SelectPackages = {
                            placeholder="Enter a install path here">
                 </div>
                 <div class="control">
-                    <a class="button is-info" v-on:click="select_file">
+                    <a class="button is-dark" v-on:click="select_file">
                         Select
                     </a>
                 </div>
             </div>
 
-            <a class="button is-primary is-pulled-right" v-on:click="install">Install!</a>
+            <a class="button is-dark is-pulled-right" v-if="!$root.$data.metadata.preexisting_install" 
+               v-on:click="install">Install!</a>
+            <a class="button is-dark is-pulled-right" v-if="$root.$data.metadata.preexisting_install"
+               v-on:click="install">Modify</a>
+            <a class="button is-pulled-left" v-if="$root.$data.metadata.preexisting_install"
+               v-on:click="go_back">Back</a>
         </div>
     `,
     methods: {
@@ -149,13 +141,16 @@ const SelectPackages = {
         },
         install: function() {
             router.push("/install/regular");
+        },
+        go_back: function() {
+            router.go(-1);
         }
     }
 };
 
 const InstallPackages = {
     template: `
-        <div class="column">
+        <div class="column has-padding">
             <h4 class="subtitle" v-if="$root.$data.metadata.is_launcher">Checking for updates...</h4>
             <h4 class="subtitle" v-else-if="is_uninstall">Uninstalling...</h4>
             <h4 class="subtitle" v-else>Installing...</h4>
@@ -193,25 +188,27 @@ const InstallPackages = {
 
             results["path"] = app.install_location;
 
+            var that = this; // IE workaround
+
             stream_ajax(this.is_uninstall ? "/api/uninstall" :
-                "/api/start-install", (line) => {
+                "/api/start-install", function(line) {
                 if (line.hasOwnProperty("Status")) {
-                    this.progress_message = line.Status[0];
-                    this.progress = line.Status[1] * 100;
+                    that.progress_message = line.Status[0];
+                    that.progress = line.Status[1] * 100;
                 }
 
                 if (line.hasOwnProperty("Error")) {
                     if (app.metadata.is_launcher) {
                         app.exit();
                     } else {
-                        this.failed_with_error = true;
+                        that.failed_with_error = true;
                         router.replace({name: 'showerr', params: {msg: line.Error}});
                     }
                 }
-            }, (e) => {
+            }, function(e) {
                 if (app.metadata.is_launcher) {
                     app.exit();
-                } else if (!this.failed_with_error) {
+                } else if (!that.failed_with_error) {
                     router.push("/complete");
                 }
             }, undefined, results);
@@ -221,7 +218,7 @@ const InstallPackages = {
 
 const ErrorView = {
     template: `
-        <div class="column">
+        <div class="column has-padding">
             <h4 class="subtitle">An error occurred:</h4>
 
             <code>{{ msg }}</code>
@@ -242,7 +239,81 @@ const ErrorView = {
     }
 };
 
-const
+const CompleteView = {
+    template: `
+        <div class="column has-padding">
+            <h4 class="subtitle">Thanks for installing {{ $root.$data.attrs.name }}!</h4>
+
+            <a class="button is-dark is-pulled-right" v-on:click="exit">Exit</a>
+        </div>
+    `,
+    methods: {
+        exit: function() {
+            app.exit();
+        }
+    }
+};
+
+const ModifyView = {
+    template: `
+        <div class="column has-padding">
+            <h4 class="subtitle">Choose an option:</h4>
+
+            <div class="field is-grouped">
+                <p class="control">
+                    <a class="button is-link" v-on:click="update">
+                        Update
+                    </a>
+                </p>
+                <p class="control">
+                    <a class="button" v-on:click="modify_packages">
+                        Modify
+                    </a>
+                </p>
+                <p class="control">
+                    <a class="button is-danger" v-on:click="prepare_uninstall">
+                        Uninstall
+                    </a>
+                </p>
+            </div>
+            
+            <div class="modal is-active" v-if="show_uninstall">
+                <div class="modal-background"></div>
+                <div class="modal-card">
+                    <header class="modal-card-head">
+                        <p class="modal-card-title">Are you sure you want to uninstall {{ $root.$data.attrs.name }}?</p>
+                    </header>
+                    <footer class="modal-card-foot">
+                        <button class="button is-danger" v-on:click="uninstall">Yes</button>
+                        <button class="button" v-on:click="cancel_uninstall">No</button>
+                    </footer>
+                </div>
+            </div>
+        </div>
+    `,
+    data: function() {
+        return {
+            show_uninstall: false
+        }
+    },
+    methods: {
+        update: function() {
+            router.push("/install/regular");
+        },
+        modify_packages: function() {
+            router.push("/packages");
+        },
+        prepare_uninstall: function() {
+            this.show_uninstall = true;
+        },
+        cancel_uninstall: function() {
+            this.show_uninstall = false;
+        },
+        uninstall: function() {
+            router.push("/install/uninstall");
+        },
+    }
+};
 
 const router = new VueRouter({
     routes: [
@@ -265,6 +336,16 @@ const router = new VueRouter({
             path: '/showerr',
             name: 'showerr',
             component: ErrorView
+        },
+        {
+            path: '/complete',
+            name: 'complete',
+            component: CompleteView
+        },
+        {
+            path: '/modify',
+            name: 'modify',
+            component: ModifyView
         },
         {
             path: '/',

@@ -96,8 +96,7 @@ fn main() {
                 .value_name("TARGET")
                 .help("Launches the specified executable after checking for updates")
                 .takes_value(true),
-        )
-        .get_matches();
+        ).get_matches();
 
     info!("{} installer", app_name);
 

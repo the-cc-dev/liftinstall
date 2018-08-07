@@ -141,7 +141,7 @@
             </div>
         </section>
 
-        <div class="modal is-active" v-if="confirm_uninstall">
+        <!--<div class="modal is-active" v-if="confirm_uninstall">
             <div class="modal-background"></div>
             <div class="modal-card">
                 <header class="modal-card-head">
@@ -152,7 +152,7 @@
                     <button class="button" v-on:click="cancel_uninstall">No</button>
                 </footer>
             </div>
-        </div>
+        </div>-->
     </div>
 
     <script src="/js/vue.js"></script>
@@ -196,32 +196,32 @@
         }
 
         var app = new Vue({
-            router,
+            router: router,
             data: {
                 attrs: base_attributes,
                 config : {},
                 install_location : "",
                 // If the initial modify menu should be shown
-                modify_install : false,
+                /*modify_install : false,
                 // If the package selection screen should be shown
                 select_packages : true,
                 // If an installation operation is happening
                 is_installing : false,
                 // If an installation has completed successfully
-                is_finished : false,
+                is_finished : false,*/
                 // If the application should act as an launcher, rather than as an installer
                 is_launcher : false,
                 launcher_path : undefined,
                 // If a confirmation prompt should be shown
-                confirm_uninstall : false,
+                /*confirm_uninstall : false,
                 // If the downloading config page should be shown
                 is_downloading_config : false,
                 progress : 0,
                 progress_message : "",
-                has_error : false,
+                has_error : false,*/
                 // If the option to pick an install location should be provided
                 show_install_location : true,
-                error : "",
+                //error : "",
                 metadata : {
                     database : [],
                     install_path : "",
@@ -229,22 +229,6 @@
                 }
             },
             methods: {
-                "back_to_packages": function() {
-                    app.select_packages = true;
-                    app.has_error = false;
-                    app.is_installing = false;
-                    app.is_finished = false;
-                },
-                "prepare_uninstall": function() {
-                    app.confirm_uninstall = true;
-                },
-                "cancel_uninstall": function() {
-                    app.confirm_uninstall = false;
-                },
-                "modify_packages": function() {
-                    app.select_packages = true;
-                    app.modify_install = false;
-                },
                 "exit": function() {
                     ajax("/api/exit", function() {});
                 }

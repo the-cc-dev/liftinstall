@@ -8,7 +8,7 @@ macro_rules! include_files_as_assets {
     ( $target_match:expr, $( $file_name:expr ),* ) => {
         match $target_match {
             $(
-                $file_name => Some(include_bytes!(concat!("../static/", $file_name)).as_ref()),
+                $file_name => Some(include_bytes!(concat!(concat!(env!("OUT_DIR"), "/static/"), $file_name)).as_ref()),
             )*
             _ => None
         }

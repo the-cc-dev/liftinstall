@@ -17,8 +17,7 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
                 record.level(),
                 message
             ))
-        })
-        .level(log::LevelFilter::Info)
+        }).level(log::LevelFilter::Info)
         .chain(io::stdout())
         .chain(fern::log_file("installer.log")?)
         .apply()?;

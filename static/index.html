@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -15,11 +15,10 @@
 </head>
 <body>
     <div id="app">
-        <!-- Main content -->
         <section class="section">
             <div class="container">
                 <div class="columns">
-                    <div class="column is-one-third has-padding" v-if="!is_launcher">
+                    <div class="column is-one-third has-padding" v-if="!metadata.is_launcher">
                         <h1 class="title">
                             Welcome to the {{ attrs.name }} installer!
                         </h1>
@@ -29,211 +28,16 @@
                     </div>
 
                     <router-view></router-view>
-
-                    <!--<div class="column has-padding">
-                        <div v-if="has_error">
-                            <h4 class="subtitle">An error occurred:</h4>
-
-                            <pre>{{ error }}</pre>
-
-                            <a class="button is-dark is-pulled-right" v-on:click="back_to_packages">Back</a>
-                        </div>
-
-                    <div class="column" v-else-if="is_downloading_config">
-                        <h4 class="subtitle">Downloading config...</h4>
-
-                        <div v-html="progress_message"></div>
-                        <progress class="progress is-info is-medium" v-bind:value="progress" max="100">
-                            {{ progress }}%
-                        </progress>
-                    </div>
-
-                        <div v-else-if="modify_install">
-                            <h4 class="subtitle">Choose an option:</h4>
-
-                            <div class="field is-grouped">
-                                <p class="control">
-                                    <a class="button is-link" v-on:click="install">
-                                        Update
-                                    </a>
-                                </p>
-                                <p class="control">
-                                    <a class="button" v-on:click="modify_packages">
-                                        Modify
-                                    </a>
-                                </p>
-                                <p class="control">
-                                    <a class="button is-danger" v-on:click="prepare_uninstall">
-                                        Uninstall
-                                    </a>
-                                </p>
-                            </div>
-                        </div>
-
-                        <div v-else-if="select_packages">
-                            <h4 class="subtitle">Select your preferred settings:</h4>
-
-                            <div class="tile is-ancestor">
-                                <div class="tile is-parent" v-for="package in config.packages" :index="package.name">
-                                    <div class="tile is-child">
-                                        <div class="box">
-                                            <label class="checkbox">
-                                                <input type="checkbox" v-model="package.default" />
-                                                {{ package.name }}
-                                                <span v-if="package.installed"><i>(installed)</i></span>
-                                            </label>
-                                            <p>
-                                                {{ package.description }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="subtitle is-6" v-if="show_install_location">Install Location</div>
-                            <div class="field has-addons" v-if="show_install_location">
-                                <div class="control is-expanded">
-                                    <input class="input" type="text" v-model="install_location"
-                                           placeholder="Enter a install path here">
-                                </div>
-                                <div class="control">
-                                    <a class="button is-dark" v-on:click="select_file">
-                                        Select
-                                    </a>
-                                </div>
-                            </div>
-
-                            <a class="button is-dark is-pulled-right" v-if="show_install_location"
-                               v-on:click="install">Install!</a>
-                            <a class="button is-dark is-pulled-right" v-if="!show_install_location"
-                               v-on:click="install">Modify</a>
-                            <a class="button is-pulled-left" v-if="!show_install_location"
-                               v-on:click="back_to_modify">Back</a>
-                        </div>
-
-                        <div v-else-if="is_installing">
-                            <h4 class="subtitle" v-if="is_launcher">Checking for updates...</h4>
-                            <h4 class="subtitle" v-else>Installing...</h4>
-                            <div v-html="config.installing_message"></div>
-                            <br />
-
-                            <div v-html="progress_message"></div>
-                            <br />
-
-                            <progress class="progress is-info is-medium" v-bind:value="progress" max="100">
-                                {{ progress }}%
-                            </progress>
-                        </div>
-
-                        <div v-else-if="is_finished">
-                            <h4 class="subtitle">Thanks for installing {{ attrs.name }}!</h4>
-
-                            <a class="button is-dark is-pulled-right" v-on:click="exit">Exit</a>
-                        </div>
-
-                        <div v-else>
-                            <h4 class="subtitle">Oh no!</h4>
-                            <div>A error occurred during installation. Please retry!</div>
-                        </div>
-                    </div>
-                    -->
                 </div>
             </div>
         </section>
-
-        <!--<div class="modal is-active" v-if="confirm_uninstall">
-            <div class="modal-background"></div>
-            <div class="modal-card">
-                <header class="modal-card-head">
-                    <p class="modal-card-title">Are you sure you want to uninstall {{ attrs.name }}?</p>
-                </header>
-                <footer class="modal-card-foot">
-                    <button class="button is-danger" v-on:click="uninstall">Yes</button>
-                    <button class="button" v-on:click="cancel_uninstall">No</button>
-                </footer>
-            </div>
-        </div>-->
     </div>
 
-    <script src="/js/vue.js"></script>
-    <script src="/js/vue-router.js"></script>
-    <script src="/api/attrs"></script>
-    <script src="/js/helpers.js"></script>
-    <script src="/js/views.js"></script>
-    <script>
-        // Overwrite loggers with the logging backend
-        window.onerror = function(msg, url, line) {
-            window.external.invoke(JSON.stringify({
-                Log: {
-                    kind: "error",
-                    msg: msg + " @ " + url + ":" + line
-                }
-            }));
-        };
-
-        // Borrowed from http://tobyho.com/2012/07/27/taking-over-console-log/
-        function intercept(method){
-            console[method] = function(){
-                var message = Array.prototype.slice.apply(arguments).join(' ');
-                window.external.invoke(JSON.stringify({
-                    Log: {
-                        kind: method,
-                        msg: message
-                    }
-                }));
-            }
-        }
-
-        var methods = ['log', 'warn', 'error'];
-        for (var i = 0; i < methods.length; i++) {
-            intercept(methods[i]);
-        }
-
-        document.getElementById("window-title").innerText = base_attributes.name + " Installer";
-
-        function selectFileCallback(name) {
-            app.install_location = name;
-        }
-
-        var app = new Vue({
-            router: router,
-            data: {
-                attrs: base_attributes,
-                config : {},
-                install_location : "",
-                // If the initial modify menu should be shown
-                /*modify_install : false,
-                // If the package selection screen should be shown
-                select_packages : true,
-                // If an installation operation is happening
-                is_installing : false,
-                // If an installation has completed successfully
-                is_finished : false,*/
-                // If the application should act as an launcher, rather than as an installer
-                is_launcher : false,
-                launcher_path : undefined,
-                // If a confirmation prompt should be shown
-                /*confirm_uninstall : false,
-                // If the downloading config page should be shown
-                is_downloading_config : false,
-                progress : 0,
-                progress_message : "",
-                has_error : false,*/
-                // If the option to pick an install location should be provided
-                show_install_location : true,
-                //error : "",
-                metadata : {
-                    database : [],
-                    install_path : "",
-                    preexisting_install : false
-                }
-            },
-            methods: {
-                "exit": function() {
-                    ajax("/api/exit", function() {});
-                }
-            }
-        }).$mount("#app");
-    </script>
+    <script src="/js/vue.js" type="text/javascript"></script>
+    <script src="/js/vue-router.js" type="text/javascript"></script>
+    <script src="/api/attrs" type="text/javascript"></script>
+    <script src="/js/helpers.js" type="text/javascript"></script>
+    <script src="/js/views.js" type="text/javascript"></script>
+    <script src="/js/main.js" type="text/javascript"></script>
 </body>
 </html>

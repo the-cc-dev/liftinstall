@@ -37,8 +37,6 @@ pub fn file_from_string(file_path: &str) -> Option<(String, &'static [u8])> {
         "/css/bulma.min.css",
         "/css/main.css",
         "/fonts/roboto-v18-latin-regular.eot",
-        "/fonts/roboto-v18-latin-regular.svg",
-        "/fonts/roboto-v18-latin-regular.ttf",
         "/fonts/roboto-v18-latin-regular.woff",
         "/fonts/roboto-v18-latin-regular.woff2",
         "/js/vue.min.js",
@@ -46,7 +44,8 @@ pub fn file_from_string(file_path: &str) -> Option<(String, &'static [u8])> {
         "/js/vue-router.min.js",
         "/js/vue-router.js",
         "/js/helpers.js",
-        "/js/views.js"
+        "/js/views.js",
+        "/js/main.js"
     )?;
 
     Some((string_mime, contents))

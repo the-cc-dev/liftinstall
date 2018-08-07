@@ -34,7 +34,7 @@ const DownloadConfig = {
                 console.error("Got error while downloading config: "
                     + e);
 
-                if (app.is_launcher) {
+                if (app.metadata.is_launcher) {
                     // Just launch the target application
                     app.exit();
                 } else {

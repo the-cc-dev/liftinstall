@@ -28,7 +28,9 @@
                         </h2>
                     </div>
 
-                    <div class="column has-padding">
+                    <router-view></router-view>
+
+                    <!--<div class="column has-padding">
                         <div v-if="has_error">
                             <h4 class="subtitle">An error occurred:</h4>
 
@@ -71,7 +73,6 @@
                         <div v-else-if="select_packages">
                             <h4 class="subtitle">Select your preferred settings:</h4>
 
-                            <!-- Build options -->
                             <div class="tile is-ancestor">
                                 <div class="tile is-parent" v-for="package in config.packages" :index="package.name">
                                     <div class="tile is-child">
@@ -135,6 +136,7 @@
                             <div>A error occurred during installation. Please retry!</div>
                         </div>
                     </div>
+                    -->
                 </div>
             </div>
         </section>
@@ -153,9 +155,11 @@
         </div>
     </div>
 
+    <script src="/js/vue.js"></script>
+    <script src="/js/vue-router.js"></script>
     <script src="/api/attrs"></script>
     <script src="/js/helpers.js"></script>
-    <script src="/js/vue.min.js"></script>
+    <script src="/js/views.js"></script>
     <script>
         // Overwrite loggers with the logging backend
         window.onerror = function(msg, url, line) {
@@ -192,7 +196,7 @@
         }
 
         var app = new Vue({
-            el: '#app',
+            router,
             data: {
                 attrs: base_attributes,
                 config : {},
@@ -225,107 +229,6 @@
                 }
             },
             methods: {
-                "download_config": function() {
-                    app.is_downloading_config = true;
-
-                    ajax("/api/config", function(e) {
-                        app.download_install_status();
-                        app.config = e;
-                    });
-                },
-                "download_install_status": function() {
-                    ajax("/api/installation-status", function(e) {
-                        app.is_downloading_config = false;
-                        app.metadata = e;
-                        if (e.preexisting_install) {
-                            app.modify_install = true;
-                            app.select_packages = false;
-                            app.show_install_location = false;
-                            app.install_location = e.install_path;
-
-                            // Copy over installed packages
-                            for (var x = 0; x < app.config.packages.length; x++) {
-                                app.config.packages[x].default = false;
-                                app.config.packages[x].installed = false;
-                            }
-
-                            for (var i = 0; i < app.metadata.database.length; i++) {
-                                // Find this config package
-                                for (var x = 0; x < app.config.packages.length; x++) {
-                                    if (app.config.packages[x].name === app.metadata.database[i].name) {
-                                        app.config.packages[x].default = true;
-                                        app.config.packages[x].installed = true;
-                                    }
-                                }
-                            }
-
-                            if (e.is_launcher) {
-                                document.getElementById("window-title").innerText = app.attrs.name + " Updater";
-
-                                app.is_launcher = true;
-                                app.install();
-                            }
-                        } else {
-                            for (var x = 0; x < app.config.packages.length; x++) {
-                                app.config.packages[x].installed = false;
-                            }
-
-                            ajax("/api/default-path", function(e) {
-                                if (e.path != null) {
-                                    app.install_location = e.path;
-                                }
-                            });
-                        }
-                    });
-                },
-                "select_file": function() {
-                    window.external.invoke(JSON.stringify({
-                        SelectInstallDir: {
-                            callback_name: "selectFileCallback"
-                        }
-                    }));
-                },
-                "install": function() {
-                    this.is_installing = true;
-                    this.modify_install = false;
-                    this.select_packages = false;
-
-                    var results = {};
-
-                    for (var package_index = 0; package_index < this.config.packages.length; package_index++) {
-                        var current_package = this.config.packages[package_index];
-                        if (current_package.default != null) {
-                            results[current_package.name] = current_package.default;
-                        }
-                    }
-
-                    results["path"] = this.install_location;
-
-                    stream_ajax("/api/start-install", function(line) {
-                        if (line.hasOwnProperty("Status")) {
-                            app.progress_message = line.Status[0];
-                            app.progress = line.Status[1] * 100;
-                        }
-
-                        if (line.hasOwnProperty("Error")) {
-                            app.is_installing = false;
-                            app.has_error = true;
-                            app.error = line.Error;
-
-                            // Exit anyway - don't want to disturb the user
-                            if (app.is_launcher) {
-                                app.exit();
-                            }
-                        }
-                    }, function(e) {
-                        app.is_installing = false;
-                        if (app.is_launcher) {
-                            app.exit();
-                        } else {
-                            app.is_finished = true;
-                        }
-                    }, undefined, results);
-                },
                 "back_to_packages": function() {
                     app.select_packages = true;
                     app.has_error = false;
@@ -342,40 +245,11 @@
                     app.select_packages = true;
                     app.modify_install = false;
                 },
-                "uninstall": function() {
-                    app.is_installing = true;
-                    app.confirm_uninstall = false;
-                    app.modify_install = false;
-                    app.select_packages = false;
-
-                    stream_ajax("/api/uninstall", function(line) {
-                        if (line.hasOwnProperty("Status")) {
-                            app.progress_message = line.Status[0];
-                            app.progress = line.Status[1] * 100;
-                        }
-
-                        if (line.hasOwnProperty("Error")) {
-                            app.is_installing = false;
-                            app.has_error = true;
-                            app.error = line.Error;
-                        }
-                    }, function(e) {
-                        app.is_installing = false;
-                        app.is_finished = true;
-                    }, undefined, {});
-                },
-                "back_to_modify": function() {
-                    app.modify_install = true;
-                    app.select_packages = false;
-                    app.show_install_location = false;
-                },
                 "exit": function() {
                     ajax("/api/exit", function() {});
                 }
             }
-        });
-
-        app.download_config();
+        }).$mount("#app");
     </script>
 </body>
 </html>

@@ -39,9 +39,14 @@ function ajax(path, successCallback, failCallback, data) {
         var form = "";
 
         for (var key in data) {
+            if (!data.hasOwnProperty(key)) {
+                continue;
+            }
+
             if (form !== "") {
                 form += "&";
             }
+
             form += encodeURIComponent(key) + "=" + encodeURIComponent(data[key]);
         }
 
@@ -74,10 +79,11 @@ function stream_ajax(path, callback, successCallback, failCallback, data) {
     });
 
     var buffer = "";
+    var seenBytes = 0;
 
     req.onreadystatechange = function() {
         if(req.readyState > 2) {
-            buffer += req.responseText.substr(req.seenBytes);
+            buffer += req.responseText.substr(seenBytes);
 
             var pointer;
             while ((pointer = buffer.indexOf("\n")) >= 0) {
@@ -92,7 +98,7 @@ function stream_ajax(path, callback, successCallback, failCallback, data) {
                 callback(contents);
             }
 
-            req.seenBytes = req.responseText.length;
+            seenBytes = req.responseText.length;
         }
     };
 
@@ -106,9 +112,14 @@ function stream_ajax(path, callback, successCallback, failCallback, data) {
         var form = "";
 
         for (var key in data) {
+            if (!data.hasOwnProperty(key)) {
+                continue;
+            }
+
             if (form !== "") {
                 form += "&";
             }
+
             form += encodeURIComponent(key) + "=" + encodeURIComponent(data[key]);
         }
 

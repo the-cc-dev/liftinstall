@@ -149,7 +149,7 @@ fn main() {
         let server = WebServer::with_addr(framework.clone(), address)
             .log_expect("Failed to bind to address");
 
-        debug!("Server: {:?}", address);
+        info!("Server: {:?}", address);
 
         http_address = Some(address);
 

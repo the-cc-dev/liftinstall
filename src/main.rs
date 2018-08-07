@@ -71,7 +71,6 @@ use log::Level;
 
 use config::BaseAttributes;
 
-// TODO: Fetch this over a HTTP request?
 static RAW_CONFIG: &'static str = include_str!("../config.toml");
 
 #[derive(Deserialize, Debug)]

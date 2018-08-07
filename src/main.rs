@@ -50,8 +50,6 @@ mod tasks;
 
 use web_view::*;
 
-use config::Config;
-
 use installer::InstallerFramework;
 
 #[cfg(windows)]
@@ -71,7 +69,8 @@ use clap::App;
 use clap::Arg;
 use log::Level;
 
-// TODO: Fetch this over a HTTP request?
+use config::BaseAttributes;
+
 static RAW_CONFIG: &'static str = include_str!("../config.toml");
 
 #[derive(Deserialize, Debug)]
@@ -83,9 +82,10 @@ enum CallbackType {
 fn main() {
     logging::setup_logger().expect("Unable to setup logging!");
 
-    let config = Config::from_toml_str(RAW_CONFIG).log_expect("Config file could not be read");
+    let config =
+        BaseAttributes::from_toml_str(RAW_CONFIG).log_expect("Config file could not be read");
 
-    let app_name = config.general.name.clone();
+    let app_name = config.name.clone();
 
     let matches = App::new(format!("{} installer", app_name))
         .version(env!("CARGO_PKG_VERSION"))
@@ -96,7 +96,8 @@ fn main() {
                 .value_name("TARGET")
                 .help("Launches the specified executable after checking for updates")
                 .takes_value(true),
-        ).get_matches();
+        )
+        .get_matches();
 
     info!("{} installer", app_name);
 

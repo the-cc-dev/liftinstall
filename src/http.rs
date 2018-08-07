@@ -8,6 +8,19 @@ use reqwest;
 
 use std::io::Read;
 
+/// Downloads a text file from the specified URL.
+pub fn download_text(url: &str) -> Result<String, String> {
+    // TODO: Decrease check time
+    let mut client = match reqwest::get(url) {
+        Ok(v) => v,
+        Err(v) => return Err(format!("Failed to GET resource: {:?}", v)),
+    };
+
+    client
+        .text()
+        .map_err(|v| format!("Failed to get text from resource: {:?}", v))
+}
+
 /// Streams a file from a HTTP server.
 pub fn stream_file<F>(url: &str, mut callback: F) -> Result<(), String>
 where

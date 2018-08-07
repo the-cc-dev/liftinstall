@@ -32,6 +32,10 @@ use installer::InstallerFramework;
 use logging::LoggingErrors;
 use std::process::Command;
 
+use http;
+
+use config::Config;
+
 #[derive(Serialize)]
 struct FileSelection {
     path: Option<String>,
@@ -55,7 +59,8 @@ impl WebServer {
                     Ok(WebService {
                         framework: framework.clone(),
                     })
-                }).log_expect("Failed to bind to port");
+                })
+                .log_expect("Failed to bind to port");
 
             server.run().log_expect("Failed to run HTTP server");
         });
@@ -79,16 +84,16 @@ impl Service for WebService {
     fn call(&self, req: Self::Request) -> Self::Future {
         Box::new(future::ok(match (req.method(), req.path()) {
             // This endpoint should be usable directly from a <script> tag during loading.
-            (&Get, "/api/config") => {
+            (&Get, "/api/attrs") => {
                 let framework = self
                     .framework
                     .read()
                     .log_expect("InstallerFramework has been dirtied");
 
                 let file = encapsulate_json(
-                    "config",
+                    "base_attributes",
                     &framework
-                        .get_config()
+                        .base_attributes
                         .to_json_str()
                         .log_expect("Failed to render JSON representation of config"),
                 );
@@ -97,6 +102,59 @@ impl Service for WebService {
                     .with_header(ContentLength(file.len() as u64))
                     .with_header(ContentType::json())
                     .with_body(file)
+            }
+            // Returns the web config loaded
+            (&Get, "/api/config") => {
+                let mut framework = self
+                    .framework
+                    .write()
+                    .log_expect("InstallerFramework has been dirtied");
+
+                info!(
+                    "Downloading configuration from {:?}...",
+                    framework.base_attributes.target_url
+                );
+
+                match http::download_text(&framework.base_attributes.target_url)
+                    .map(|x| Config::from_toml_str(&x))
+                {
+                    Ok(Ok(config)) => {
+                        framework.config = Some(config.clone());
+
+                        info!("Configuration file downloaded successfully.");
+
+                        let file = framework
+                            .get_config()
+                            .log_expect("Config should be loaded by now")
+                            .to_json_str()
+                            .log_expect("Failed to render JSON representation of config");
+
+                        Response::<hyper::Body>::new()
+                            .with_header(ContentLength(file.len() as u64))
+                            .with_header(ContentType::json())
+                            .with_body(file)
+                    }
+                    Ok(Err(v)) => {
+                        error!("Bad configuration file: {:?}", v);
+
+                        Response::<hyper::Body>::new()
+                            .with_status(StatusCode::ServiceUnavailable)
+                            .with_header(ContentType::plaintext())
+                            .with_body("Bad HTTP response")
+                    }
+                    Err(v) => {
+                        error!(
+                            "General connectivity error while downloading config: {:?}",
+                            v
+                        );
+
+                        Response::<hyper::Body>::new()
+                            .with_status(StatusCode::ServiceUnavailable)
+                            .with_header(ContentLength(v.len() as u64))
+                            .with_header(ContentType::plaintext())
+                            .with_body(v)
+                    }
+                }
             }
             // This endpoint should be usable directly from a <script> tag during loading.
             (&Get, "/api/packages") => {

@@ -26,7 +26,7 @@ function ajax(path, successCallback, failCallback, data) {
         if (this.status === 200 && this.getResponseHeader('Content-Type').indexOf("application/json") !== -1) {
             successCallback(JSON.parse(this.responseText));
         } else {
-            failCallback();
+            failCallback(this.responseText);
         }
     });
     req.addEventListener("error", failCallback);
@@ -69,7 +69,7 @@ function stream_ajax(path, callback, successCallback, failCallback, data) {
         if (this.status === 200) {
             successCallback(this.responseText);
         } else {
-            failCallback();
+            failCallback(this.responseText);
         }
     });
 
@@ -77,14 +77,12 @@ function stream_ajax(path, callback, successCallback, failCallback, data) {
 
     req.onreadystatechange = function() {
         if(req.readyState > 2) {
-            var newData = req.responseText.substr(req.seenBytes);
-
-            buffer += newData;
+            buffer += req.responseText.substr(req.seenBytes);
 
             var pointer;
-            while ((pointer = newData.indexOf("\n")) >= 0) {
-                var line = newData.substring(0, pointer).trim();
-                newData = newData.substring(pointer + 1);
+            while ((pointer = buffer.indexOf("\n")) >= 0) {
+                var line = buffer.substring(0, pointer).trim();
+                buffer = buffer.substring(pointer + 1);
 
                 if (line.length === 0) {
                     continue;

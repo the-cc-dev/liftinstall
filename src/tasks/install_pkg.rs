@@ -41,7 +41,12 @@ impl Task for InstallPackageTask {
         let mut installed_files = Vec::new();
 
         let mut metadata: Option<PackageDescription> = None;
-        for description in &context.config.packages {
+        for description in &context
+            .config
+            .as_ref()
+            .log_expect("Should have packages by now")
+            .packages
+        {
             if self.name == description.name {
                 metadata = Some(description.clone());
                 break;

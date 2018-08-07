@@ -21,7 +21,7 @@
                 <div class="columns">
                     <div class="column is-one-third has-padding" v-if="!is_launcher">
                         <h1 class="title">
-                            Welcome to the {{ config.general.name }} installer!
+                            Welcome to the {{ attrs.name }} installer!
                         </h1>
                         <h2 class="subtitle">
                             We will have you up and running in just a few moments.
@@ -36,6 +36,15 @@
 
                             <a class="button is-dark is-pulled-right" v-on:click="back_to_packages">Back</a>
                         </div>
+
+                    <div class="column" v-else-if="is_downloading_config">
+                        <h4 class="subtitle">Downloading config...</h4>
+
+                        <div v-html="progress_message"></div>
+                        <progress class="progress is-info is-medium" v-bind:value="progress" max="100">
+                            {{ progress }}%
+                        </progress>
+                    </div>
 
                         <div v-else-if="modify_install">
                             <h4 class="subtitle">Choose an option:</h4>
@@ -104,7 +113,7 @@
                         <div v-else-if="is_installing">
                             <h4 class="subtitle" v-if="is_launcher">Checking for updates...</h4>
                             <h4 class="subtitle" v-else>Installing...</h4>
-                            <div v-html="config.general.installing_message"></div>
+                            <div v-html="config.installing_message"></div>
                             <br />
 
                             <div v-html="progress_message"></div>
@@ -116,7 +125,7 @@
                         </div>
 
                         <div v-else-if="is_finished">
-                            <h4 class="subtitle">Thanks for installing {{ config.general.name }}!</h4>
+                            <h4 class="subtitle">Thanks for installing {{ attrs.name }}!</h4>
 
                             <a class="button is-dark is-pulled-right" v-on:click="exit">Exit</a>
                         </div>
@@ -134,7 +143,7 @@
             <div class="modal-background"></div>
             <div class="modal-card">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">Are you sure you want to uninstall {{ config.general.name }}?</p>
+                    <p class="modal-card-title">Are you sure you want to uninstall {{ attrs.name }}?</p>
                 </header>
                 <footer class="modal-card-foot">
                     <button class="button is-danger" v-on:click="uninstall">Yes</button>
@@ -144,7 +153,7 @@
         </div>
     </div>
 
-    <script src="/api/config"></script>
+    <script src="/api/attrs"></script>
     <script src="/js/helpers.js"></script>
     <script src="/js/vue.min.js"></script>
     <script>
@@ -176,7 +185,7 @@
             intercept(methods[i]);
         }
 
-        document.getElementById("window-title").innerText = config.name + " Installer";
+        document.getElementById("window-title").innerText = base_attributes.name + " Installer";
 
         function selectFileCallback(name) {
             app.install_location = name;
@@ -185,7 +194,8 @@
         var app = new Vue({
             el: '#app',
             data: {
-                config : config,
+                attrs: base_attributes,
+                config : {},
                 install_location : "",
                 // If the initial modify menu should be shown
                 modify_install : false,
@@ -200,6 +210,8 @@
                 launcher_path : undefined,
                 // If a confirmation prompt should be shown
                 confirm_uninstall : false,
+                // If the downloading config page should be shown
+                is_downloading_config : false,
                 progress : 0,
                 progress_message : "",
                 has_error : false,
@@ -213,6 +225,59 @@
                 }
             },
             methods: {
+                "download_config": function() {
+                    app.is_downloading_config = true;
+
+                    ajax("/api/config", function(e) {
+                        app.download_install_status();
+                        app.config = e;
+                    });
+                },
+                "download_install_status": function() {
+                    ajax("/api/installation-status", function(e) {
+                        app.is_downloading_config = false;
+                        app.metadata = e;
+                        if (e.preexisting_install) {
+                            app.modify_install = true;
+                            app.select_packages = false;
+                            app.show_install_location = false;
+                            app.install_location = e.install_path;
+
+                            // Copy over installed packages
+                            for (var x = 0; x < app.config.packages.length; x++) {
+                                app.config.packages[x].default = false;
+                                app.config.packages[x].installed = false;
+                            }
+
+                            for (var i = 0; i < app.metadata.database.length; i++) {
+                                // Find this config package
+                                for (var x = 0; x < app.config.packages.length; x++) {
+                                    if (app.config.packages[x].name === app.metadata.database[i].name) {
+                                        app.config.packages[x].default = true;
+                                        app.config.packages[x].installed = true;
+                                    }
+                                }
+                            }
+
+                            if (e.is_launcher) {
+                                document.getElementById("window-title").innerText = app.attrs.name + " Updater";
+
+                                app.is_launcher = true;
+                                app.install();
+                            }
+                        } else {
+                            for (var x = 0; x < app.config.packages.length; x++) {
+                                app.config.packages[x].installed = false;
+                            }
+
+                            ajax("/api/default-path", function(e) {
+                                if (e.path != null) {
+                                    app.install_location = e.path;
+                                }
+                            });
+                        }
+                    });
+                },
                 "select_file": function() {
                     window.external.invoke(JSON.stringify({
                         SelectInstallDir: {
@@ -310,48 +375,7 @@
             }
         });
 
-        ajax("/api/installation-status", function(e) {
-            app.metadata = e;
-            if (e.preexisting_install) {
-                app.modify_install = true;
-                app.select_packages = false;
-                app.show_install_location = false;
-                app.install_location = e.install_path;
-
-                // Copy over installed packages
-                for (var x = 0; x < app.config.packages.length; x++) {
-                    app.config.packages[x].default = false;
-                    app.config.packages[x].installed = false;
-                }
-
-                for (var i = 0; i < app.metadata.database.length; i++) {
-                    // Find this config package
-                    for (var x = 0; x < app.config.packages.length; x++) {
-                        if (app.config.packages[x].name === app.metadata.database[i].name) {
-                            app.config.packages[x].default = true;
-                            app.config.packages[x].installed = true;
-                        }
-                    }
-                }
-
-                if (e.is_launcher) {
-                    document.getElementById("window-title").innerText = config.name + " Updater";
-
-                    app.is_launcher = true;
-                    app.install();
-                }
-            } else {
-                for (var x = 0; x < app.config.packages.length; x++) {
-                    app.config.packages[x].installed = false;
-                }
-
-                ajax("/api/default-path", function(e) {
-                    if (e.path != null) {
-                        app.install_location = e.path;
-                    }
-                });
-            }
-        });
+        app.download_config();
     </script>
 </body>
 </html>

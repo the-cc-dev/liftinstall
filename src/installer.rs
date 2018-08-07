@@ -136,8 +136,6 @@ impl InstallerFramework {
 
     /// Sends a request for everything to be uninstalled.
     pub fn uninstall(&mut self, messages: &Sender<InstallMessage>) -> Result<(), String> {
-        // TODO: Cleanup maintenance tool
-
         let items: Vec<String> = self.database.iter().map(|x| x.name.clone()).collect();
 
         let task = Box::new(UninstallTask { items });

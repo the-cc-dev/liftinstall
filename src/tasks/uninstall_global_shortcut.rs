@@ -21,7 +21,7 @@ impl Task for UninstallGlobalShortcutsTask {
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 0);
 
-        messenger(&format!("Uninstalling global shortcut..."), 0.0);
+        messenger("Uninstalling global shortcut...", 0.0);
 
         while let Some(file) = context.database.shortcuts.pop() {
             info!("Deleting shortcut {:?}", file);

@@ -21,7 +21,7 @@ impl Task for InstallGlobalShortcutsTask {
         context: &mut InstallerFramework,
         messenger: &Fn(&str, f64),
     ) -> Result<TaskParamType, String> {
-        messenger(&format!("Generating global shortcut..."), 0.0);
+        messenger("Generating global shortcut...", 0.0);
 
         let path = context
             .install_path
@@ -44,7 +44,7 @@ impl Task for InstallGlobalShortcutsTask {
             .to_str()
             .log_expect("Unable to build shortcut metadata (tool)");
 
-        context.database.shortcuts.push(create_shortcut(
+        let shortcut_file = create_shortcut(
             &format!("{} maintenance tool", context.base_attributes.name),
             &format!(
                 "Launch the {} maintenance tool to update, modify and uninstall the application.",
@@ -54,7 +54,11 @@ impl Task for InstallGlobalShortcutsTask {
             // TODO: Send by list
             "",
             &starting_dir,
-        )?);
+        )?;
+
+        if !shortcut_file.is_empty() {
+            context.database.shortcuts.push(shortcut_file);
+        }
 
         Ok(TaskParamType::None)
     }

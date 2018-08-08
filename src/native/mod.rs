@@ -63,7 +63,7 @@ mod natives {
     }
 
     /// Cleans up the installer
-    pub fn burn_on_exit(path: PathBuf) {
+    pub fn burn_on_exit(path: &PathBuf) {
         // Need a cmd workaround here.
         let tool = path.join("maintenancetool.exe");
         let tool = tool
@@ -108,7 +108,7 @@ mod natives {
     }
 
     /// Cleans up the installer
-    pub fn burn_on_exit(path: PathBuf) {
+    pub fn burn_on_exit(path: &PathBuf) {
         // Thank god for *nix platforms
         if let Err(e) = remove_file(path.join("/maintenancetool")) {
             // No regular logging now.

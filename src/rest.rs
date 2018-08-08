@@ -209,7 +209,7 @@ impl Service for WebService {
                 if framework.burn_after_exit {
                     let path = framework
                         .install_path
-                        .clone()
+                        .as_ref()
                         .log_expect("No install path when one should have existed?");
 
                     println!("Base path: {:?}", path);

@@ -212,7 +212,6 @@ impl Service for WebService {
                         .as_ref()
                         .log_expect("No install path when one should have existed?");
 
-                    println!("Base path: {:?}", path);
                     native::burn_on_exit(path);
                 }
 

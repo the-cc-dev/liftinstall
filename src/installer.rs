@@ -63,6 +63,8 @@ pub struct InstallerFramework {
     pub install_path: Option<PathBuf>,
     pub preexisting_install: bool,
     pub is_launcher: bool,
+    // If we just completed an uninstall, and we should clean up after ourselves.
+    pub burn_after_exit: bool,
     pub launcher_path: Option<String>,
 }
 
@@ -199,6 +201,7 @@ impl InstallerFramework {
             .map_err(|x| format!("Failed to delete metadata: {:?}", x))?;
 
         // Logging will have to be done later
+        self.burn_after_exit = true;
 
         Ok(())
     }
@@ -254,6 +257,7 @@ impl InstallerFramework {
             install_path: None,
             preexisting_install: false,
             is_launcher: false,
+            burn_after_exit: false,
             launcher_path: None,
         }
     }
@@ -280,6 +284,7 @@ impl InstallerFramework {
             install_path: Some(path),
             preexisting_install: true,
             is_launcher: false,
+            burn_after_exit: false,
             launcher_path: None,
         })
     }

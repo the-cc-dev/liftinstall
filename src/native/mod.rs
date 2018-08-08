@@ -11,6 +11,8 @@ mod natives {
     use logging::LoggingErrors;
 
     use std::env;
+    use std::path::PathBuf;
+    use std::process::Command;
 
     include!(concat!(env!("OUT_DIR"), "/interop.rs"));
 
@@ -59,10 +61,39 @@ mod natives {
             )),
         }
     }
+
+    /// Cleans up the installer
+    pub fn burn_on_exit(path: PathBuf) {
+        // Need a cmd workaround here.
+        let tool = path.join("maintenancetool.exe");
+        let tool = tool
+            .to_str()
+            .log_expect("Unable to convert tool path to string")
+            .replace(" ", "\\ ");
+
+        let log = path.join("installer.log");
+        let log = log
+            .to_str()
+            .log_expect("Unable to convert log path to string")
+            .replace(" ", "\\ ");
+
+        let target_arguments = format!("ping 127.0.0.1 -n 6 > nul && del {} {}", tool, log);
+
+        info!("Launching cmd with {:?}", target_arguments);
+
+        Command::new("C:\\Windows\\system32\\cmd.exe")
+            .arg("/C")
+            .arg(&target_arguments)
+            .spawn()
+            .log_expect("Unable to start child process");
+    }
 }
 
 #[cfg(not(windows))]
 mod natives {
+    use std::fs::remove_file;
+    use std::path::PathBuf;
+
     pub fn create_shortcut(
         name: &str,
         description: &str,
@@ -74,6 +105,20 @@ mod natives {
         warn!("create_shortcut is stubbed!");
 
         Ok("".to_string())
+    }
+
+    /// Cleans up the installer
+    pub fn burn_on_exit(path: PathBuf) {
+        // Thank god for *nix platforms
+        if let Err(e) = remove_file(path.join("/maintenancetool")) {
+            // No regular logging now.
+            eprintln!("Failed to delete maintenancetool: {:?}", e);
+        };
+
+        if let Err(e) = remove_file(path.join("/installer.log")) {
+            // No regular logging now.
+            eprintln!("Failed to delete installer log: {:?}", e);
+        };
     }
 }
 

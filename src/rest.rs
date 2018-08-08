@@ -19,6 +19,7 @@ use url::form_urlencoded;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::process::exit;
+use std::process::Command;
 use std::sync::mpsc::channel;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -30,11 +31,12 @@ use installer::InstallMessage;
 use installer::InstallerFramework;
 
 use logging::LoggingErrors;
-use std::process::Command;
 
 use http;
 
 use config::Config;
+
+use native;
 
 #[derive(Serialize)]
 struct FileSelection {
@@ -202,6 +204,16 @@ impl Service for WebService {
                     Command::new(v)
                         .spawn()
                         .log_expect("Unable to start child process");
+                }
+
+                if framework.burn_after_exit {
+                    let path = framework
+                        .install_path
+                        .clone()
+                        .log_expect("No install path when one should have existed?");
+
+                    println!("Base path: {:?}", path);
+                    native::burn_on_exit(path);
                 }
 
                 exit(0);

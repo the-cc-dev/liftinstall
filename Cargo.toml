@@ -33,7 +33,7 @@ regex = "0.2"
 
 dirs = "1.0"
 zip = "0.4.2"
-rust-lzma = "0.3"
+xz-decom = {git = "https://github.com/j-selby/xz-decom.git", rev = "f5e9576"}
 tar = "0.4"
 
 log = "0.4"

@@ -29,8 +29,8 @@ extern crate regex;
 extern crate semver;
 
 extern crate dirs;
-extern crate lzma;
 extern crate tar;
+extern crate xz_decom;
 extern crate zip;
 
 extern crate fern;

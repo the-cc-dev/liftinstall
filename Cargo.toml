@@ -32,7 +32,9 @@ semver = {version = "0.9.0", features = ["serde"]}
 regex = "0.2"
 
 dirs = "1.0"
-zip = "0.2.8"
+zip = "0.4.2"
+rust-lzma = "0.3"
+tar = "0.4"
 
 log = "0.4"
 fern = "0.5"

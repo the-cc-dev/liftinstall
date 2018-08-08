@@ -15,6 +15,8 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Write;
 
+use std::env::consts::OS;
+
 const FILES_TO_PREPROCESS: &'static [&'static str] = &["helpers.js", "views.js"];
 
 #[cfg(windows)]
@@ -31,6 +33,21 @@ fn main() {
     handle_binary();
 
     let output_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+
+    let os = OS.to_lowercase();
+
+    // Find target config
+    let target_config = PathBuf::from(format!("config.{}.toml", os));
+
+    if !target_config.exists() {
+        panic!(
+            "There is no config file specified for the platform: {:?}. \
+             Create a file named \"config.{}.toml\" in the root directory.",
+            os, os
+        );
+    }
+
+    copy(target_config, output_dir.join("config.toml")).expect("Unable to copy config file");
 
     // Copy files from static/ to build dir
     for entry in WalkDir::new("static") {

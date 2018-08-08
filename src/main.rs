@@ -29,6 +29,8 @@ extern crate regex;
 extern crate semver;
 
 extern crate dirs;
+extern crate lzma;
+extern crate tar;
 extern crate zip;
 
 extern crate fern;
@@ -39,6 +41,7 @@ extern crate chrono;
 
 extern crate clap;
 
+mod archives;
 mod assets;
 mod config;
 mod http;
@@ -71,7 +74,7 @@ use log::Level;
 
 use config::BaseAttributes;
 
-static RAW_CONFIG: &'static str = include_str!("../config.toml");
+static RAW_CONFIG: &'static str = include_str!(concat!(env!("OUT_DIR"), "/config.toml"));
 
 #[derive(Deserialize, Debug)]
 enum CallbackType {

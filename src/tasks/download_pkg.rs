@@ -80,7 +80,7 @@ impl Task for DownloadPackageTask {
             );
         })?;
 
-        Ok(TaskParamType::FileContents(version, data_storage))
+        Ok(TaskParamType::FileContents(version, file, data_storage))
     }
 
     fn dependencies(&self) -> Vec<Box<Task>> {

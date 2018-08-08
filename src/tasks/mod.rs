@@ -25,7 +25,7 @@ pub enum TaskParamType {
     /// Metadata about a file
     File(Version, File),
     /// Downloaded contents of a file
-    FileContents(Version, Vec<u8>),
+    FileContents(Version, File, Vec<u8>),
     /// Tells the runtime to break parsing other dependencies
     Break,
 }

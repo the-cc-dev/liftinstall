@@ -9,16 +9,17 @@ use config::PackageDescription;
 use installer::LocalInstallation;
 
 use std::fs::create_dir_all;
-use std::fs::File;
 use std::io::copy;
-use std::io::Cursor;
 
 use tasks::download_pkg::DownloadPackageTask;
 use tasks::uninstall_pkg::UninstallPackageTask;
 
-use zip::ZipArchive;
-
 use logging::LoggingErrors;
+
+use archives;
+
+use std::fs::OpenOptions;
+use std::path::Path;
 
 pub struct InstallPackageTask {
     pub name: String,
@@ -68,61 +69,79 @@ impl Task for InstallPackageTask {
         }
 
         let data = input.pop().log_expect("Should have input from resolver!");
-        let (file, data) = match data {
-            TaskParamType::FileContents(file, data) => (file, data),
+        let (version, file, data) = match data {
+            TaskParamType::FileContents(version, file, data) => (version, file, data),
             _ => return Err("Unexpected param type to install package".to_string()),
         };
 
-        // TODO: Handle files other then zips
-        let data_cursor = Cursor::new(data.as_slice());
-        let mut zip = match ZipArchive::new(data_cursor) {
-            Ok(v) => v,
-            Err(v) => return Err(format!("Unable to open .zip file: {:?}", v)),
-        };
+        let mut archive = archives::read_archive(&file.name, data.as_slice())?;
 
-        let zip_size = zip.len();
+        archive.for_each(&mut |i, archive_size, filename, mut file| {
+            let string_name = filename
+                .to_str()
+                .ok_or("Unable to get str from file name")?
+                .to_string();
 
-        for i in 0..zip_size {
-            let mut file = zip.by_index(i).log_expect("Failed to iterate on .zip file");
-
-            messenger(
-                &format!("Extracting {} ({} of {})", file.name(), i + 1, zip_size),
-                (i as f64) / (zip_size as f64),
-            );
-
-            let filename = file.name().replace("\\", "/");
+            match &archive_size {
+                Some(size) => {
+                    messenger(
+                        &format!("Extracting {} ({} of {})", string_name, i + 1, size),
+                        (i as f64) / (*size as f64),
+                    );
+                }
+                _ => {
+                    messenger(
+                        &format!("Extracting {} ({} of ??)", string_name, i + 1),
+                        0.0,
+                    );
+                }
+            }
 
             // Ensure that parent directories exist
-            let mut parent_dir = &filename[..];
-            while let Some(v) = parent_dir.rfind('/') {
-                parent_dir = &parent_dir[0..v + 1];
+            let mut parent_dir: &Path = &filename;
+            while let Some(v) = parent_dir.parent() {
+                parent_dir = v;
 
-                if !installed_files.contains(&parent_dir.to_string()) {
-                    installed_files.push(parent_dir.to_string());
+                let string_name = parent_dir
+                    .to_str()
+                    .ok_or("Unable to get str from file name")?
+                    .to_string();
+
+                if string_name.is_empty() {
+                    continue;
+                }
+
+                if !installed_files.contains(&string_name) {
+                    info!("Creating dir: {:?}", string_name);
+                    installed_files.push(string_name);
                 }
 
                 match create_dir_all(path.join(&parent_dir)) {
                     Ok(v) => v,
                     Err(v) => return Err(format!("Unable to create dir: {:?}", v)),
                 }
-
-                parent_dir = &parent_dir[0..v];
             }
 
             // Create target file
             let target_path = path.join(&filename);
 
-            // Check to make sure this isn't a directory
-            if filename.ends_with('/') || filename.ends_with('\\') {
-                // Directory was already created
-                continue;
+            info!("Creating file: {:?}", string_name);
+
+            if !installed_files.contains(&string_name) {
+                installed_files.push(string_name.to_string());
             }
 
-            info!("Creating file: {:?}", target_path);
+            let mut file_metadata = OpenOptions::new();
+            file_metadata.write(true).create_new(true);
 
-            installed_files.push(filename.to_string());
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::OpenOptionsExt;
 
-            let mut target_file = match File::create(target_path) {
+                file_metadata.mode(0o770);
+            }
+
+            let mut target_file = match file_metadata.open(target_path) {
                 Ok(v) => v,
                 Err(v) => return Err(format!("Unable to open file handle: {:?}", v)),
             };
@@ -132,12 +151,14 @@ impl Task for InstallPackageTask {
                 Ok(v) => v,
                 Err(v) => return Err(format!("Unable to write to file: {:?}", v)),
             };
-        }
+
+            Ok(())
+        })?;
 
         // Save metadata about this package
         context.database.push(LocalInstallation {
             name: package.name.to_owned(),
-            version: file,
+            version,
             files: installed_files,
         });
 

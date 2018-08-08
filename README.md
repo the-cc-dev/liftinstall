@@ -36,7 +36,6 @@ In order to build yourself an installer, as a bare minimum, you need to:
 - Add your favicon to `static/favicon.ico`
 - Modify the bootstrap configuration file as needed (`config.PLATFORM.toml`).
 - Have the main configuration file somewhere useful, reachable over HTTP.
-- Tweak `package.metadata.winres` metadata in `Cargo.toml`
 - Run:
 
 ```bash

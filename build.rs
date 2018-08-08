@@ -1,4 +1,5 @@
 extern crate walkdir;
+
 #[cfg(windows)]
 extern crate winres;
 
@@ -7,6 +8,11 @@ extern crate bindgen;
 
 #[cfg(windows)]
 extern crate cc;
+
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate toml;
 
 use walkdir::WalkDir;
 
@@ -19,16 +25,33 @@ use std::fs::File;
 
 use std::io::BufRead;
 use std::io::BufReader;
+use std::io::Read;
 use std::io::Write;
 
 use std::env::consts::OS;
 
 const FILES_TO_PREPROCESS: &'static [&'static str] = &["helpers.js", "views.js"];
 
+/// Describes the application itself.
+#[derive(Debug, Deserialize)]
+pub struct BaseAttributes {
+    pub name: String,
+    pub target_url: String,
+}
+
 #[cfg(windows)]
-fn handle_binary() {
+fn handle_binary(config: &BaseAttributes) {
     let mut res = winres::WindowsResource::new();
     res.set_icon("static/favicon.ico");
+    res.set(
+        "FileDescription",
+        &format!("Interactive installer for {}", config.name),
+    );
+    res.set("ProductName", &format!("{} installer", config.name));
+    res.set(
+        "OriginalFilename",
+        &format!("{}_installer.exe", config.name),
+    );
     res.compile().expect("Failed to generate metadata");
 
     let bindings = bindgen::Builder::default()
@@ -48,11 +71,9 @@ fn handle_binary() {
 }
 
 #[cfg(not(windows))]
-fn handle_binary() {}
+fn handle_binary(config: &BaseAttributes) {}
 
 fn main() {
-    handle_binary();
-
     let output_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
     let os = OS.to_lowercase();
@@ -68,7 +89,21 @@ fn main() {
         );
     }
 
-    copy(target_config, output_dir.join("config.toml")).expect("Unable to copy config file");
+    // Read in the config for our own purposes
+    let file_contents = {
+        let mut file = File::open(&target_config).expect("Unable to open config file");
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf)
+            .expect("Unable to read config file contents");
+        buf
+    };
+
+    let config: BaseAttributes =
+        toml::from_slice(&file_contents).expect("Unable to parse config file");
+    handle_binary(&config);
+
+    // Copy for the main build
+    copy(&target_config, output_dir.join("config.toml")).expect("Unable to copy config file");
 
     // Copy files from static/ to build dir
     for entry in WalkDir::new("static") {

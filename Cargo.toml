@@ -7,10 +7,6 @@ documentation = "https://liftinstall.jselby.net"
 description = "An adaptable installer for your application."
 build = "build.rs"
 
-[package.metadata.winres]
-ProductName = "yuzu Installer"
-FileDescription = "An interactive installer for yuzu"
-
 [dependencies]
 web-view = {git = "https://github.com/Boscop/web-view.git", rev = "555f422d09cbb94e82a728d47e9e07ca91963f6e"}
 
@@ -53,3 +49,7 @@ nfd = "0.0.4"
 winres = "0.1"
 bindgen = "0.26.3"
 cc = "1.0"
+
+serde = "1.0.27"
+serde_derive = "1.0.27"
+toml = "0.4"

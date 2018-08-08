@@ -17,16 +17,31 @@ This is designed to be a more modern interpretation of Qt's Installer Framework,
 Building
 --------
 
+For more detailed instructions, look at the usage documentation above.
+
+There are are few system dependencies depending on your platform:
+- For all platforms, `cargo` should be available on your PATH. [Rustup](https://rustup.rs/) is the 
+  recommended way to achieve this. Stable or Nightly Rust works fine.
+- For Windows (MSVC), you need Visual Studio installed.
+- For Windows (Mingw), you need `gcc`/`g++` available on the PATH.
+- For Mac, you need Xcode installed, and Clang/etc available on the PATH.
+- For Linux, you need `gcc`/`g++`, `webkit2gtk`, and `libssl`. For Ubuntu 18.04 this would look like:
+
+```bash
+apt install -y build-essential libwebkit2gtk-4.0-dev libssl-dev
+```
+
+In order to build yourself an installer, as a bare minimum, you need to:
+
 - Add your favicon to `static/favicon.ico`
-- Modify the configuration file as needed
+- Modify the bootstrap configuration file as needed (`config.PLATFORM.toml`).
+- Have the main configuration file somewhere useful, reachable over HTTP.
 - Tweak `package.metadata.winres` metadata in `Cargo.toml`
 - Run:
 
 ```bash
 cargo build --release
 ```
-
-LiftInstall should build on both Stable and Nightly Rust.
 
 Contributing
 ------------

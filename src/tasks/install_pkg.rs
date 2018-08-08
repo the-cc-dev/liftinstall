@@ -163,7 +163,7 @@ impl Task for InstallPackageTask {
         })?;
 
         // Save metadata about this package
-        context.database.push(LocalInstallation {
+        context.database.packages.push(LocalInstallation {
             name: package.name.to_owned(),
             version,
             shortcuts,

@@ -33,9 +33,9 @@ impl Task for UninstallShortcutsTask {
             .log_expect("No install path specified");
 
         let mut metadata: Option<LocalInstallation> = None;
-        for i in 0..context.database.len() {
-            if self.name == context.database[i].name {
-                metadata = Some(context.database[i].clone());
+        for i in 0..context.database.packages.len() {
+            if self.name == context.database.packages[i].name {
+                metadata = Some(context.database.packages[i].clone());
                 break;
             }
         }
@@ -66,10 +66,10 @@ impl Task for UninstallShortcutsTask {
         for (i, file) in package.shortcuts.iter().enumerate() {
             let name = file.clone();
             let file = path.join(file);
-            info!("Deleting {:?}", file);
+            info!("Deleting shortcut {:?}", file);
 
             messenger(
-                &format!("Deleting {} ({} of {})", name, i + 1, max),
+                &format!("Deleting shortcut {} ({} of {})", name, i + 1, max),
                 (i as f64) / (max as f64),
             );
 
@@ -80,7 +80,7 @@ impl Task for UninstallShortcutsTask {
             };
 
             if let Err(v) = result {
-                error!("Failed to delete file: {:?}", v);
+                error!("Failed to delete shortcut: {:?}", v);
             }
         }
 

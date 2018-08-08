@@ -7,6 +7,7 @@ use tasks::install_pkg::InstallPackageTask;
 use tasks::save_executable::SaveExecutableTask;
 use tasks::uninstall_pkg::UninstallPackageTask;
 
+use tasks::install_global_shortcut::InstallGlobalShortcutsTask;
 use tasks::Task;
 use tasks::TaskDependency;
 use tasks::TaskOrdering;
@@ -60,6 +61,11 @@ impl Task for InstallTask {
             elements.push(TaskDependency::build(
                 TaskOrdering::Pre,
                 Box::new(SaveExecutableTask {}),
+            ));
+
+            elements.push(TaskDependency::build(
+                TaskOrdering::Pre,
+                Box::new(InstallGlobalShortcutsTask {}),
             ));
         }
 

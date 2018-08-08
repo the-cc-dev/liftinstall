@@ -27,6 +27,7 @@ use logging::LoggingErrors;
 use dirs::home_dir;
 
 use std::fs::remove_file;
+use tasks::uninstall_global_shortcut::UninstallGlobalShortcutsTask;
 
 /// A message thrown during the installation of packages.
 #[derive(Serialize)]
@@ -36,12 +37,29 @@ pub enum InstallMessage {
     EOF,
 }
 
+/// Metadata about the current installation itself.
+#[derive(Serialize, Deserialize, Clone)]
+pub struct InstallationDatabase {
+    pub packages: Vec<LocalInstallation>,
+    pub shortcuts: Vec<String>,
+}
+
+impl InstallationDatabase {
+    /// Creates a new, empty installation database.
+    pub fn new() -> InstallationDatabase {
+        InstallationDatabase {
+            packages: Vec::new(),
+            shortcuts: Vec::new(),
+        }
+    }
+}
+
 /// The installer framework contains metadata about packages, what is installable, what isn't,
 /// etc.
 pub struct InstallerFramework {
     pub base_attributes: BaseAttributes,
     pub config: Option<Config>,
-    pub database: Vec<LocalInstallation>,
+    pub database: InstallationDatabase,
     pub install_path: Option<PathBuf>,
     pub preexisting_install: bool,
     pub is_launcher: bool,
@@ -51,7 +69,7 @@ pub struct InstallerFramework {
 /// Contains basic properties on the status of the session. Subset of InstallationFramework.
 #[derive(Serialize)]
 pub struct InstallationStatus {
-    pub database: Vec<LocalInstallation>,
+    pub database: InstallationDatabase,
     pub install_path: Option<String>,
     pub preexisting_install: bool,
     pub is_launcher: bool,
@@ -110,7 +128,7 @@ impl InstallerFramework {
         // Calculate packages to *uninstall*
         let mut uninstall_items = Vec::new();
         if !fresh_install {
-            for package in &self.database {
+            for package in &self.database.packages {
                 if !items.contains(&package.name) {
                     uninstall_items.push(package.name.clone());
                 }
@@ -141,13 +159,29 @@ impl InstallerFramework {
 
     /// Sends a request for everything to be uninstalled.
     pub fn uninstall(&mut self, messages: &Sender<InstallMessage>) -> Result<(), String> {
-        let items: Vec<String> = self.database.iter().map(|x| x.name.clone()).collect();
+        let items: Vec<String> = self
+            .database
+            .packages
+            .iter()
+            .map(|x| x.name.clone())
+            .collect();
 
         let task = Box::new(UninstallTask { items });
 
         let mut tree = DependencyTree::build(task);
 
         info!("Dependency tree:\n{}", tree);
+
+        tree.execute(self, &|msg: &str, progress: f64| {
+            if let Err(v) = messages.send(InstallMessage::Status(msg.to_string(), progress as _)) {
+                error!("Failed to submit queue message: {:?}", v);
+            }
+        }).map(|_x| ())?;
+
+        // Uninstall shortcuts
+        let task = Box::new(UninstallGlobalShortcutsTask {});
+
+        let mut tree = DependencyTree::build(task);
 
         tree.execute(self, &|msg: &str, progress: f64| {
             if let Err(v) = messages.send(InstallMessage::Status(msg.to_string(), progress as _)) {
@@ -216,7 +250,7 @@ impl InstallerFramework {
         InstallerFramework {
             base_attributes: attrs,
             config: None,
-            database: Vec::new(),
+            database: InstallationDatabase::new(),
             install_path: None,
             preexisting_install: false,
             is_launcher: false,
@@ -234,7 +268,7 @@ impl InstallerFramework {
             Err(v) => return Err(format!("Unable to open file handle: {:?}", v)),
         };
 
-        let database: Vec<LocalInstallation> = match serde_json::from_reader(metadata_file) {
+        let database: InstallationDatabase = match serde_json::from_reader(metadata_file) {
             Ok(v) => v,
             Err(v) => return Err(format!("Unable to read metadata file: {:?}", v)),
         };

@@ -36,9 +36,9 @@ impl Task for UninstallPackageTask {
             .log_expect("No install path specified");
 
         let mut metadata: Option<LocalInstallation> = None;
-        for i in 0..context.database.len() {
-            if self.name == context.database[i].name {
-                metadata = Some(context.database.remove(i));
+        for i in 0..context.database.packages.len() {
+            if self.name == context.database.packages[i].name {
+                metadata = Some(context.database.packages.remove(i));
                 break;
             }
         }

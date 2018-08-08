@@ -12,12 +12,14 @@ use sources::types::Version;
 pub mod download_pkg;
 pub mod install;
 pub mod install_dir;
+pub mod install_global_shortcut;
 pub mod install_pkg;
 pub mod install_shortcuts;
 pub mod resolver;
 pub mod save_database;
 pub mod save_executable;
 pub mod uninstall;
+pub mod uninstall_global_shortcut;
 pub mod uninstall_pkg;
 pub mod uninstall_shortcuts;
 

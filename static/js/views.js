@@ -53,10 +53,10 @@ const DownloadConfig = {
                     app.config.packages[x].installed = false;
                 }
 
-                for (var i = 0; i < app.metadata.database.length; i++) {
+                for (var i = 0; i < app.metadata.database.packages.length; i++) {
                     // Find this config package
                     for (var x = 0; x < app.config.packages.length; x++) {
-                        if (app.config.packages[x].name === app.metadata.database[i].name) {
+                        if (app.config.packages[x].name === app.metadata.database.packages[i].name) {
                             app.config.packages[x].default = true;
                             app.config.packages[x].installed = true;
                         }

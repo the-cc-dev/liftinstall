@@ -35,7 +35,7 @@ impl Task for DownloadPackageTask {
         };
 
         // Check to see if this is the newest file available already
-        for element in &context.database {
+        for element in &context.database.packages {
             if element.name == self.name {
                 if element.version == version {
                     info!("{:?} is already up to date.", self.name);

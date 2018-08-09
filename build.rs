@@ -71,7 +71,7 @@ fn handle_binary(config: &BaseAttributes) {
 }
 
 #[cfg(not(windows))]
-fn handle_binary(config: &BaseAttributes) {}
+fn handle_binary(_config: &BaseAttributes) {}
 
 fn main() {
     let output_dir = PathBuf::from(env::var("OUT_DIR").unwrap());

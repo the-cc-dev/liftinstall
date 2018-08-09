@@ -238,7 +238,11 @@ const InstallPackages = {
                     if (app.metadata.is_launcher) {
                         app.exit();
                     } else if (!that.failed_with_error) {
-                        router.replace("/complete");
+                        if (that.is_uninstall) {
+                            router.replace({name: 'complete', params: {uninstall: true}});
+                        } else {
+                            router.replace({name: 'complete', params: {uninstall: false}});
+                        }
                     }
                 }
             }, undefined, results);
@@ -272,13 +276,23 @@ const ErrorView = {
 const CompleteView = {
     template: `
         <div class="column has-padding">
-            <h4 class="subtitle">Thanks for installing {{ $root.$data.attrs.name }}!</h4>
+            <div v-if="was_install">
+                <h4 class="subtitle">Thanks for installing {{ $root.$data.attrs.name }}!</h4>
 
-            <p>You can find your installed applications in your start menu.</p>
+                <p>You can find your installed applications in your start menu.</p>
+            </div>
+            <div v-else>
+                <h4 class="subtitle">{{ $root.$data.attrs.name }} has been uninstalled.</h4>
+            </div>
 
             <a class="button is-dark is-pulled-right" v-on:click="exit">Exit</a>
         </div>
     `,
+    data: function() {
+        return {
+            was_install: !this.$route.params.uninstall
+        }
+    },
     methods: {
         exit: function() {
             app.exit();
@@ -370,7 +384,7 @@ const router = new VueRouter({
             component: ErrorView
         },
         {
-            path: '/complete',
+            path: '/complete/:uninstall',
             name: 'complete',
             component: CompleteView
         },

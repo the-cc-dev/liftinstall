@@ -27,6 +27,7 @@ pre {
     -moz-user-select: text;
     -ms-user-select: text;
     user-select: text;
+    cursor: text;
 }
 
 .tile.is-child > .box {

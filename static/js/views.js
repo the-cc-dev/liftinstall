@@ -255,7 +255,7 @@ const ErrorView = {
         <div class="column has-padding">
             <h4 class="subtitle">An error occurred:</h4>
 
-            <code>{{ msg }}</code>
+            <pre>{{ msg }}</pre>
 
             <a class="button is-primary is-pulled-right" v-if="remaining" v-on:click="go_back">Back</a>
         </div>

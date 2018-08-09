@@ -274,6 +274,8 @@ const CompleteView = {
         <div class="column has-padding">
             <h4 class="subtitle">Thanks for installing {{ $root.$data.attrs.name }}!</h4>
 
+            <p>You can find your installed applications in your start menu.</p>
+
             <a class="button is-dark is-pulled-right" v-on:click="exit">Exit</a>
         </div>
     `,

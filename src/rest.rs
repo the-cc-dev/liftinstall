@@ -207,12 +207,7 @@ impl Service for WebService {
                 }
 
                 if framework.burn_after_exit {
-                    let path = framework
-                        .install_path
-                        .as_ref()
-                        .log_expect("No install path when one should have existed?");
-
-                    native::burn_on_exit(path);
+                    native::burn_on_exit();
                 }
 
                 exit(0);
@@ -253,6 +248,61 @@ impl Service for WebService {
                             error!("Uninstall error occurred: {:?}", v);
                             if let Err(v) = sender.send(InstallMessage::Error(v)) {
                                 error!("Failed to send uninstall error: {:?}", v);
+                            };
+                        }
+
+                        if let Err(v) = sender.send(InstallMessage::EOF) {
+                            error!("Failed to send EOF to client: {:?}", v);
+                        }
+                    });
+
+                    // Spawn a thread for transforming messages to chunk messages
+                    thread::spawn(move || {
+                        let mut tx = tx;
+                        loop {
+                            let response = receiver
+                                .recv()
+                                .log_expect("Failed to receive message from runner thread");
+
+                            if let InstallMessage::EOF = response {
+                                break;
+                            }
+
+                            let mut response = serde_json::to_string(&response)
+                                .log_expect("Failed to render JSON logging response payload");
+                            response.push('\n');
+                            tx = tx
+                                .send(Ok(response.into_bytes().into()))
+                                .wait()
+                                .log_expect("Failed to write JSON response payload to client");
+                        }
+                    });
+
+                    Response::<hyper::Body>::new()
+                        //.with_header(ContentLength(file.len() as u64))
+                        .with_header(ContentType::plaintext())
+                        .with_body(rx)
+                }));
+            }
+            // Updates the installer
+            (&Post, "/api/update-updater") => {
+                // We need to bit of pipelining to get this to work
+                let framework = self.framework.clone();
+
+                return Box::new(req.body().concat2().map(move |_b| {
+                    let (sender, receiver) = channel();
+                    let (tx, rx) = hyper::Body::pair();
+
+                    // Startup a thread to do this operation for us
+                    thread::spawn(move || {
+                        let mut framework = framework
+                            .write()
+                            .log_expect("InstallerFramework has been dirtied");
+
+                        if let Err(v) = framework.update_updater(&sender) {
+                            error!("Self-update error occurred: {:?}", v);
+                            if let Err(v) = sender.send(InstallMessage::Error(v)) {
+                                error!("Failed to send self-update error: {:?}", v);
                             };
                         }
 

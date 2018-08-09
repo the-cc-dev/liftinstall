@@ -26,6 +26,17 @@ for (var i = 0; i < methods.length; i++) {
     intercept(methods[i]);
 }
 
+// Disable F5
+function disable_shortcuts(e) {
+    switch (e.keyCode) {
+        case 116: // F5
+            e.preventDefault();
+            break;
+    }
+}
+
+window.addEventListener("keydown", disable_shortcuts);
+
 document.getElementById("window-title").innerText = base_attributes.name + " Installer";
 
 function selectFileCallback(name) {

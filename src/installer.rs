@@ -5,13 +5,21 @@
 use serde_json;
 
 use std::fs::File;
+use std::fs::OpenOptions;
 
+use std::env;
 use std::env::var;
 
 use std::path::Path;
 use std::path::PathBuf;
 
 use std::sync::mpsc::Sender;
+
+use std::io::copy;
+use std::io::Cursor;
+
+use std::process::exit;
+use std::process::Command;
 
 use config::BaseAttributes;
 use config::Config;
@@ -20,6 +28,7 @@ use sources::types::Version;
 
 use tasks::install::InstallTask;
 use tasks::uninstall::UninstallTask;
+use tasks::uninstall_global_shortcut::UninstallGlobalShortcutsTask;
 use tasks::DependencyTree;
 
 use logging::LoggingErrors;
@@ -27,7 +36,10 @@ use logging::LoggingErrors;
 use dirs::home_dir;
 
 use std::fs::remove_file;
-use tasks::uninstall_global_shortcut::UninstallGlobalShortcutsTask;
+
+use http;
+
+use number_prefix::{decimal_prefix, Prefixed, Standalone};
 
 /// A message thrown during the installation of packages.
 #[derive(Serialize)]
@@ -204,6 +216,122 @@ impl InstallerFramework {
         self.burn_after_exit = true;
 
         Ok(())
+    }
+
+    /// Verifies that the config has all requirements met (no need to update the
+    /// updater, for example). This will terminate if this is the case after applying
+    /// the correct actions.
+    pub fn update_updater(&mut self, messages: &Sender<InstallMessage>) -> Result<(), String> {
+        let tool = self
+            .config
+            .as_ref()
+            .log_expect("Config should exist by now")
+            .new_tool
+            .as_ref()
+            .log_expect("Frontend asked for updater update when one doesn't exist");
+
+        let mut downloaded = 0;
+        let mut data_storage: Vec<u8> = Vec::new();
+
+        http::stream_file(tool, |data, size| {
+            {
+                data_storage.extend_from_slice(&data);
+            }
+
+            downloaded += data.len();
+
+            let percentage = if size == 0 {
+                0.0
+            } else {
+                (downloaded as f64) / (size as f64)
+            };
+
+            // Pretty print data volumes
+            let pretty_current = match decimal_prefix(downloaded as f64) {
+                Standalone(bytes) => format!("{} bytes", bytes),
+                Prefixed(prefix, n) => format!("{:.0} {}B", n, prefix),
+            };
+            let pretty_total = match decimal_prefix(size as f64) {
+                Standalone(bytes) => format!("{} bytes", bytes),
+                Prefixed(prefix, n) => format!("{:.0} {}B", n, prefix),
+            };
+
+            if let Err(v) = messages.send(InstallMessage::Status(
+                format!(
+                    "Downloading self-update ({} of {})...",
+                    pretty_current, pretty_total
+                ),
+                percentage as _,
+            )) {
+                error!("Failed to submit queue message: {:?}", v);
+            }
+        })?;
+
+        info!("Launching new updater...");
+
+        // Save to file in current dir
+        let current_exe = env::current_exe().log_expect("Current executable could not be found");
+        let path = current_exe
+            .parent()
+            .log_expect("Parent directory of executable could not be found");
+
+        let platform_extension = if cfg!(windows) {
+            "maintenancetool_new.exe"
+        } else {
+            "maintenancetool_new"
+        };
+
+        let new_app = path.join(platform_extension);
+
+        let mut file_metadata = OpenOptions::new();
+        file_metadata.write(true).create(true);
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+
+            file_metadata.mode(0o770);
+        }
+
+        {
+            let mut new_app_file = match file_metadata.open(&new_app) {
+                Ok(v) => v,
+                Err(v) => return Err(format!("Unable to open installer binary: {:?}", v)),
+            };
+
+            if let Err(v) = copy(&mut Cursor::new(data_storage), &mut new_app_file) {
+                return Err(format!("Unable to copy installer binary: {:?}", v));
+            }
+        }
+
+        // Save current command line arguments
+        let args_file = path.join("args.json");
+        let args: Vec<String> = env::args_os()
+            .map(|x| {
+                x.to_str()
+                    .log_expect("Unable to convert argument to String")
+                    .to_string()
+            }).collect();
+
+        {
+            let new_app_file = match File::create(&args_file) {
+                Ok(v) => v,
+                Err(v) => return Err(format!("Unable to open args file: {:?}", v)),
+            };
+
+            serde_json::to_writer(new_app_file, &args).log_expect("Unable to write args");
+        }
+
+        let current_exe = env::current_exe().log_expect("Current executable could not be found");
+
+        // Launch this new process
+        Command::new(new_app)
+            .arg("--swap")
+            .arg(current_exe)
+            .spawn()
+            .log_expect("Unable to start child process");
+
+        exit(0);
     }
 
     /// Saves the applications database.

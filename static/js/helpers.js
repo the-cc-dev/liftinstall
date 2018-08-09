@@ -19,6 +19,8 @@ function ajax(path, successCallback, failCallback, data) {
         failCallback = defaultFailHandler;
     }
 
+    console.log("Making HTTP request to " + path);
+
     var req = new XMLHttpRequest();
 
     req.addEventListener("load", function() {
@@ -68,6 +70,8 @@ function ajax(path, successCallback, failCallback, data) {
  */
 function stream_ajax(path, callback, successCallback, failCallback, data) {
     var req = new XMLHttpRequest();
+
+    console.log("Making streaming HTTP request to " + path);
 
     req.addEventListener("load", function() {
         // The server can sometimes return a string error. Make sure we handle this.

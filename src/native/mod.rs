@@ -11,7 +11,6 @@ mod natives {
     use logging::LoggingErrors;
 
     use std::env;
-    use std::path::PathBuf;
     use std::process::Command;
 
     include!(concat!(env!("OUT_DIR"), "/interop.rs"));
@@ -63,7 +62,12 @@ mod natives {
     }
 
     /// Cleans up the installer
-    pub fn burn_on_exit(path: &PathBuf) {
+    pub fn burn_on_exit() {
+        let current_exe = env::current_exe().log_expect("Current executable could not be found");
+        let path = current_exe
+            .parent()
+            .log_expect("Parent directory of executable could not be found");
+
         // Need a cmd workaround here.
         let tool = path.join("maintenancetool.exe");
         let tool = tool
@@ -77,7 +81,7 @@ mod natives {
             .log_expect("Unable to convert log path to string")
             .replace(" ", "\\ ");
 
-        let target_arguments = format!("ping 127.0.0.1 -n 6 > nul && del {} {}", tool, log);
+        let target_arguments = format!("ping 127.0.0.1 -n 3 > nul && del {} {}", tool, log);
 
         info!("Launching cmd with {:?}", target_arguments);
 
@@ -108,7 +112,13 @@ mod natives {
     }
 
     /// Cleans up the installer
-    pub fn burn_on_exit(path: &PathBuf) {
+    pub fn burn_on_exit() {
+        let current_exe =
+            std::env::current_exe().log_expect("Current executable could not be found");
+        let path = current_exe
+            .parent()
+            .log_expect("Parent directory of executable could not be found");
+
         // Thank god for *nix platforms
         if let Err(e) = remove_file(path.join("/maintenancetool")) {
             // No regular logging now.

@@ -44,6 +44,12 @@ const DownloadConfig = {
             });
         },
         choose_next_state: function() {
+            // Update the updater if needed
+            if (app.config.new_tool) {
+                router.push("/install/updater");
+                return;
+            }
+
             if (app.metadata.preexisting_install) {
                 app.install_location = app.metadata.install_path;
 
@@ -153,6 +159,7 @@ const InstallPackages = {
         <div class="column has-padding">
             <h4 class="subtitle" v-if="$root.$data.metadata.is_launcher">Checking for updates...</h4>
             <h4 class="subtitle" v-else-if="is_uninstall">Uninstalling...</h4>
+            <h4 class="subtitle" v-else-if="is_updater_update">Downloading update for updater...</h4>
             <h4 class="subtitle" v-else>Installing...</h4>
             <div v-html="$root.$data.config.installing_message"></div>
             <br />
@@ -168,11 +175,14 @@ const InstallPackages = {
             progress: 0.0,
             progress_message: "Please wait...",
             is_uninstall: false,
+            is_updater_update: false,
             failed_with_error: false
         }
     },
     created: function() {
         this.is_uninstall = this.$route.params.kind === "uninstall";
+        this.is_updater_update = this.$route.params.kind === "updater";
+        console.log("Installer kind: " + this.$route.params.kind);
         this.install();
     },
     methods: {
@@ -190,8 +200,15 @@ const InstallPackages = {
 
             var that = this; // IE workaround
 
-            stream_ajax(this.is_uninstall ? "/api/uninstall" :
-                "/api/start-install", function(line) {
+            var targetUrl = "/api/start-install";
+            if (this.is_uninstall) {
+                targetUrl = "/api/uninstall";
+            }
+            if (this.is_updater_update) {
+                targetUrl = "/api/update-updater";
+            }
+
+            stream_ajax(targetUrl, function(line) {
                 if (line.hasOwnProperty("Status")) {
                     that.progress_message = line.Status[0];
                     that.progress = line.Status[1] * 100;
@@ -206,10 +223,23 @@ const InstallPackages = {
                     }
                 }
             }, function(e) {
-                if (app.metadata.is_launcher) {
-                    app.exit();
-                } else if (!that.failed_with_error) {
-                    router.push("/complete");
+                if (that.is_updater_update) {
+                    // Continue with what we were doing
+                    if (app.metadata.is_launcher) {
+                        router.replace("/install/regular");
+                    } else {
+                        if (app.metadata.preexisting_install) {
+                            router.replace("/modify");
+                        } else {
+                            router.replace("/packages");
+                        }
+                    }
+                } else {
+                    if (app.metadata.is_launcher) {
+                        app.exit();
+                    } else if (!that.failed_with_error) {
+                        router.replace("/complete");
+                    }
                 }
             }, undefined, results);
         }

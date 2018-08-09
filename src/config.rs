@@ -60,6 +60,9 @@ impl BaseAttributes {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
     pub installing_message: String,
+    /// URL to a new updater, if required
+    #[serde(default)]
+    pub new_tool: Option<String>,
     pub packages: Vec<PackageDescription>,
 }
 

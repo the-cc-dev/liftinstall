@@ -61,11 +61,20 @@ use nfd::Response;
 
 use rest::WebServer;
 
+use std::net::TcpListener;
 use std::net::ToSocketAddrs;
 
-use std::net::TcpListener;
 use std::sync::Arc;
 use std::sync::RwLock;
+
+use std::path::PathBuf;
+
+use std::process::exit;
+use std::process::Command;
+use std::{thread, time};
+
+use std::fs::remove_file;
+use std::fs::File;
 
 use logging::LoggingErrors;
 
@@ -91,16 +100,26 @@ fn main() {
 
     let app_name = config.name.clone();
 
-    let matches = App::new(format!("{} installer", app_name))
+    let app_about = format!("An interactive installer for {}", app_name);
+    let app = App::new(format!("{} installer", app_name))
         .version(env!("CARGO_PKG_VERSION"))
-        .about(format!("An interactive installer for {}", app_name).as_ref())
+        .about(app_about.as_ref())
         .arg(
             Arg::with_name("launcher")
                 .long("launcher")
                 .value_name("TARGET")
                 .help("Launches the specified executable after checking for updates")
                 .takes_value(true),
-        ).get_matches();
+        ).arg(
+            Arg::with_name("swap")
+                .long("swap")
+                .value_name("TARGET")
+                .help("Internal usage - swaps around a new installer executable")
+                .takes_value(true),
+        );
+
+    let reinterpret_app = app.clone(); // In case a reparse is needed
+    let mut matches = app.get_matches();
 
     info!("{} installer", app_name);
 
@@ -108,6 +127,66 @@ fn main() {
     let current_path = current_exe
         .parent()
         .log_expect("Parent directory of executable could not be found");
+
+    // Check to see if we are currently in a self-update
+    if let Some(to_path) = matches.value_of("swap") {
+        let to_path = PathBuf::from(to_path);
+
+        // Sleep a little bit to allow Windows to close the previous file handle
+        thread::sleep(time::Duration::from_millis(3000));
+
+        info!(
+            "Swapping installer from {} to {}",
+            current_exe.display(),
+            to_path.display()
+        );
+
+        if cfg!(windows) {
+            use std::fs::copy;
+
+            copy(&current_exe, &to_path).log_expect("Unable to copy new installer");
+        } else {
+            use std::fs::rename;
+
+            rename(&current_exe, &to_path).log_expect("Unable to move new installer");
+        }
+
+        Command::new(to_path)
+            .spawn()
+            .log_expect("Unable to start child process");
+
+        exit(0);
+    }
+
+    let args_file = current_path.join("args.json");
+
+    if args_file.exists() {
+        let database: Vec<String> = {
+            let metadata_file =
+                File::open(&args_file).log_expect("Unable to open args file handle");
+
+            serde_json::from_reader(metadata_file).log_expect("Unable to read metadata file")
+        };
+
+        matches = reinterpret_app.get_matches_from(database);
+
+        info!("Reparsed command line arguments from original instance");
+        remove_file(args_file).log_expect("Unable to clean up args file");
+
+        if cfg!(windows) {
+            let updater_executable = current_path.join("maintenancetool.exe");
+
+            // Sleep a little bit to allow Windows to close the previous file handle
+            thread::sleep(time::Duration::from_millis(3000));
+
+            if updater_executable.exists() {
+                remove_file(updater_executable)
+                    .log_expect("Unable to clean up previous updater file");
+            }
+        }
+    }
+
+    // Load in metadata as to learn about the environment
     let metadata_file = current_path.join("metadata.json");
     let mut framework = if metadata_file.exists() {
         info!("Using pre-existing metadata file: {:?}", metadata_file);

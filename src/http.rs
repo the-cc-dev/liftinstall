@@ -12,7 +12,7 @@ use reqwest::Client;
 /// Builds a customised HTTP client.
 pub fn build_client() -> Result<Client, String> {
     Client::builder()
-        .timeout(Duration::from_secs(5))
+        .timeout(Duration::from_secs(8))
         .build()
         .map_err(|x| format!("Unable to build cient: {:?}", x))
 }

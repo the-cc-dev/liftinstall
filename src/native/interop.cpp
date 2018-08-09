@@ -49,7 +49,7 @@ extern "C" int saveShortcut(
     }
 
     //Append the shortcut name to the folder
-    MultiByteToWideChar(CP_ACP,0,shortcutPath,-1,wName,MAX_PATH);
+    MultiByteToWideChar(CP_UTF8,0,shortcutPath,-1,wName,MAX_PATH);
 
     // Load the file if it exists, to get the values for anything
     // that we do not set.  Ignore errors, such as if it does not exist.

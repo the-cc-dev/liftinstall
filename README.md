@@ -11,8 +11,8 @@ An installer for your application. Designed to be customisable to the core, hook
  applications, and have a decent UI.
 
 This is designed to be a more modern interpretation of Qt's Installer Framework, which is hard to develop on,
- poorly documented, has hardcoded package listing format which requires very specific setups for packages and where
- packages must be built using their tool. Finally, it is poorly supported, with rare updates and a large list of bugs.
+ poorly documented, has a hardcoded package listing format, and isn't supported all that well, with rare updates 
+ and a large list of bugs.
 
 Building
 --------

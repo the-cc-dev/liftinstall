@@ -159,7 +159,7 @@ const InstallPackages = {
         <div class="column has-padding">
             <h4 class="subtitle" v-if="$root.$data.metadata.is_launcher">Checking for updates...</h4>
             <h4 class="subtitle" v-else-if="is_uninstall">Uninstalling...</h4>
-            <h4 class="subtitle" v-else-if="is_updater_update">Downloading update for updater...</h4>
+            <h4 class="subtitle" v-else-if="is_updater_update">Downloading self-update...</h4>
             <h4 class="subtitle" v-else>Installing...</h4>
             <div v-html="$root.$data.config.installing_message"></div>
             <br />

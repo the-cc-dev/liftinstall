@@ -1,18 +1,18 @@
-LiftInstall
-===========
+<img src="banner.png" width="400px" />
+    
+[Usage Documentation](https://liftinstall.jselby.net/user-guide/) 
+    - [Quick Start](https://liftinstall.jselby.net/user-guide/quick-start) 
+    - [License](LICENSE)
 
 [![Build Status](https://travis-ci.org/j-selby/liftinstall.svg?branch=master)](https://travis-ci.org/j-selby/liftinstall)
 
-- Usage Documentation: https://liftinstall.jselby.net/
 
 An installer for your application. Designed to be customisable to the core, hookable from external
  applications, and have a decent UI.
 
-This is designed to be a more modern interpretation of Qt's Installer Framework, which has several issues:
-- Hard to develop on and poorly documented
-- Hardcoded package listing format, requires very specific setups for packages, packages must be built
-    using their tool
-- Poorly supported, with rare updates and a large list of bugs
+This is designed to be a more modern interpretation of Qt's Installer Framework, which is hard to develop on,
+ poorly documented, has hardcoded package listing format which requires very specific setups for packages and where
+ packages must be built using their tool. Finally, it is poorly supported, with rare updates and a large list of bugs.
 
 Building
 --------

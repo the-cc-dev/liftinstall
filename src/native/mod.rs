@@ -96,7 +96,10 @@ mod natives {
 #[cfg(not(windows))]
 mod natives {
     use std::fs::remove_file;
-    use std::path::PathBuf;
+
+    use std::env;
+
+    use logging::LoggingErrors;
 
     pub fn create_shortcut(
         name: &str,
@@ -113,8 +116,7 @@ mod natives {
 
     /// Cleans up the installer
     pub fn burn_on_exit() {
-        let current_exe =
-            std::env::current_exe().log_expect("Current executable could not be found");
+        let current_exe = env::current_exe().log_expect("Current executable could not be found");
         let path = current_exe
             .parent()
             .log_expect("Parent directory of executable could not be found");

@@ -40,6 +40,9 @@ clap = "2.32.0"
 
 [build-dependencies]
 walkdir = "2"
+serde = "1.0.27"
+serde_derive = "1.0.27"
+toml = "0.4"
 
 [target.'cfg(windows)'.dependencies]
 # NFD is needed on Windows, as web-view doesn't work correctly here
@@ -49,7 +52,3 @@ nfd = "0.0.4"
 winres = "0.1"
 bindgen = "0.26.3"
 cc = "1.0"
-
-serde = "1.0.27"
-serde_derive = "1.0.27"
-toml = "0.4"

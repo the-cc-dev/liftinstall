@@ -2,7 +2,7 @@
 //!
 //! A simple wrapper around Hyper's HTTP client.
 
-use hyper::header::ContentLength;
+use reqwest::header::CONTENT_LENGTH;
 
 use std::io::Read;
 use std::time::Duration;
@@ -19,10 +19,10 @@ pub fn build_client() -> Result<Client, String> {
 
 /// Downloads a text file from the specified URL.
 pub fn download_text(url: &str) -> Result<String, String> {
-    let mut client = match build_client()?.get(url).send() {
-        Ok(v) => v,
-        Err(v) => return Err(format!("Failed to GET resource: {:?}", v)),
-    };
+    let mut client = build_client()?
+        .get(url)
+        .send()
+        .map_err(|x| format!("Failed to GET resource: {:?}", v))?;
 
     client
         .text()
@@ -34,26 +34,25 @@ pub fn stream_file<F>(url: &str, mut callback: F) -> Result<(), String>
 where
     F: FnMut(Vec<u8>, u64) -> (),
 {
-    let mut client = match build_client()?.get(url).send() {
-        Ok(v) => v,
-        Err(v) => return Err(format!("Failed to GET resource: {:?}", v)),
-    };
+    let mut client = build_client()?
+        .get(url)
+        .send()
+        .map_err(|x| format!("Failed to GET resource: {:?}", v))?;
 
-    let size = {
-        let size: Option<&ContentLength> = client.headers().get();
-        match size {
-            Some(&ContentLength(v)) => v,
-            None => 0,
-        }
+    let size = match client.headers().get(CONTENT_LENGTH) {
+        Some(ref v) => v
+            .to_str()
+            .map_err(|x| format!("Content length header was invalid: {:?}", x))?
+            .parse()
+            .map_err(|x| format!("Failed to parse content length: {:?}", x))?,
+        None => 0,
     };
 
     let mut buf = [0 as u8; 8192];
     loop {
-        let len = client.read(&mut buf);
-        let len = match len {
-            Ok(v) => v,
-            Err(v) => return Err(format!("Failed to read resource: {:?}", v)),
-        };
+        let len = client
+            .read(&mut buf)
+            .map_err(|x| format!("Failed to read resource: {:?}", x))?;
 
         if len == 0 {
             break;

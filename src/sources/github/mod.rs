@@ -2,7 +2,7 @@
 //!
 //! Contains the Github API implementation of a release source.
 
-use reqwest::header::UserAgent;
+use reqwest::header::USER_AGENT;
 use reqwest::StatusCode;
 
 use serde_json;
@@ -41,11 +41,11 @@ impl ReleaseSource for GithubReleases {
             .get(&format!(
                 "https://api.github.com/repos/{}/releases",
                 config.repo
-            )).header(UserAgent::new("liftinstall (j-selby)"))
+            )).header(USER_AGENT, "liftinstall (j-selby)")
             .send()
             .map_err(|x| format!("Error while sending HTTP request: {:?}", x))?;
 
-        if response.status() != StatusCode::Ok {
+        if response.status() != StatusCode::OK {
             return Err(format!("Bad status code: {:?}", response.status()));
         }
 

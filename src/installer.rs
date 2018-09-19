@@ -116,7 +116,13 @@ impl InstallerFramework {
             Err(_) => home_dir()?,
         };
 
-        let file = base_dir.join(app_name);
+        let file_name = if cfg!(unix) {
+            format!(".{}", app_name.to_ascii_lowercase())
+        } else {
+            app_name.to_string()
+        };
+
+        let file = base_dir.join(file_name);
 
         Some(file.to_str()?.to_owned())
     }

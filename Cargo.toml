@@ -15,7 +15,7 @@ futures = "*"
 mime_guess = "1.8.3"
 url = "*"
 
-reqwest = "0.8.6"
+reqwest = {git = "https://github.com/seanmonstar/reqwest.git", rev = "68d012e"}
 number_prefix = "0.2.7"
 
 serde = "1.0.27"

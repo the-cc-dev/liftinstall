@@ -117,17 +117,16 @@ mod natives {
     /// Cleans up the installer
     pub fn burn_on_exit() {
         let current_exe = env::current_exe().log_expect("Current executable could not be found");
-        let path = current_exe
-            .parent()
-            .log_expect("Parent directory of executable could not be found");
 
         // Thank god for *nix platforms
-        if let Err(e) = remove_file(path.join("/maintenancetool")) {
+        if let Err(e) = remove_file(&current_exe) {
             // No regular logging now.
             eprintln!("Failed to delete maintenancetool: {:?}", e);
         };
 
-        if let Err(e) = remove_file(path.join("/installer.log")) {
+        let current_dir = env::current_dir().log_expect("Current directory cannot be found");
+
+        if let Err(e) = remove_file(current_dir.join("installer.log")) {
             // No regular logging now.
             eprintln!("Failed to delete installer log: {:?}", e);
         };

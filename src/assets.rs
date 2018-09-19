@@ -34,6 +34,7 @@ pub fn file_from_string(file_path: &str) -> Option<(String, &'static [u8])> {
         file_path,
         "/index.html",
         "/favicon.ico",
+        "/logo.png",
         "/css/bulma.min.css",
         "/css/main.css",
         "/fonts/roboto-v18-latin-regular.eot",

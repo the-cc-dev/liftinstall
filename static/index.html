@@ -19,12 +19,17 @@
             <div class="container">
                 <div class="columns">
                     <div class="column is-one-third has-padding" v-if="!metadata.is_launcher">
-                        <h1 class="title">
+                        <img src="/logo.png" width="60%" />
+                        <h1 class="subtitle" v-if="!metadata.preexisting_install">
                             Welcome to the {{ attrs.name }} installer!
                         </h1>
-                        <h2 class="subtitle">
+                        <h2 class="subtitle" v-if="!metadata.preexisting_install">
                             We will have you up and running in just a few moments.
                         </h2>
+
+                        <h1 class="subtitle" v-if="metadata.preexisting_install">
+                            Welcome to the {{ attrs.name }} maintenance tool.
+                        </h1>
                     </div>
 
                     <router-view></router-view>

@@ -116,8 +116,8 @@ const SelectPackages = {
                 </div>
             </div>
 
-            <div class="subtitle is-6" v-if="!$root.$data.metadata.preexisting_install">Install Location</div>
-            <div class="field has-addons" v-if="!$root.$data.metadata.preexisting_install">
+            <div class="subtitle is-6" v-if="!$root.$data.metadata.preexisting_install && advanced">Install Location</div>
+            <div class="field has-addons" v-if="!$root.$data.metadata.preexisting_install && advanced">
                 <div class="control is-expanded">
                     <input class="input" type="text" v-model="$root.$data.install_location"
                            placeholder="Enter a install path here">
@@ -129,14 +129,23 @@ const SelectPackages = {
                 </div>
             </div>
 
-            <a class="button is-dark is-pulled-right" v-if="!$root.$data.metadata.preexisting_install" 
-               v-on:click="install">Install</a>
-            <a class="button is-dark is-pulled-right" v-if="$root.$data.metadata.preexisting_install"
-               v-on:click="install">Modify</a>
+            <div class="is-pulled-right">
+                <a class="button is-dark" v-if="!$root.$data.metadata.preexisting_install && !advanced" 
+                   v-on:click="advanced = true">Advanced...</a>
+                <a class="button is-dark" v-if="!$root.$data.metadata.preexisting_install" 
+                   v-on:click="install">Install</a>
+                <a class="button is-dark" v-if="$root.$data.metadata.preexisting_install"
+                   v-on:click="install">Modify</a>
+            </div>
             <a class="button is-pulled-left" v-if="$root.$data.metadata.preexisting_install"
                v-on:click="go_back">Back</a>
         </div>
     `,
+    data: function() {
+        return {
+            advanced: false
+        }
+    },
     methods: {
         select_file: function() {
             window.external.invoke(JSON.stringify({

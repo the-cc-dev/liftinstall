@@ -166,7 +166,7 @@ const SelectPackages = {
 const InstallPackages = {
     template: `
         <div class="column has-padding">
-            <h4 class="subtitle" v-if="$root.$data.metadata.is_launcher">Checking for updates...</h4>
+            <h4 class="subtitle" v-if="$root.$data.metadata.is_launcher || is_update">Checking for updates...</h4>
             <h4 class="subtitle" v-else-if="is_uninstall">Uninstalling...</h4>
             <h4 class="subtitle" v-else-if="is_updater_update">Downloading self-update...</h4>
             <h4 class="subtitle" v-else>Installing...</h4>
@@ -185,12 +185,14 @@ const InstallPackages = {
             progress_message: "Please wait...",
             is_uninstall: false,
             is_updater_update: false,
+            is_update: false,
             failed_with_error: false
         }
     },
     created: function() {
         this.is_uninstall = this.$route.params.kind === "uninstall";
         this.is_updater_update = this.$route.params.kind === "updater";
+        this.is_update = this.$route.params.kind === "update";
         console.log("Installer kind: " + this.$route.params.kind);
         this.install();
     },
@@ -248,9 +250,9 @@ const InstallPackages = {
                         app.exit();
                     } else if (!that.failed_with_error) {
                         if (that.is_uninstall) {
-                            router.replace({name: 'complete', params: {uninstall: true}});
+                            router.replace({name: 'complete', params: {uninstall: true, update: that.is_update}});
                         } else {
-                            router.replace({name: 'complete', params: {uninstall: false}});
+                            router.replace({name: 'complete', params: {uninstall: false, update: that.is_update}});
                         }
                     }
                 }
@@ -285,7 +287,12 @@ const ErrorView = {
 const CompleteView = {
     template: `
         <div class="column has-padding">
-            <div v-if="was_install">
+            <div v-if="was_update">
+                <h4 class="subtitle">{{ $root.$data.attrs.name }} has been updated.</h4>
+
+                <p>You can find your installed applications in your start menu.</p>
+            </div>
+            <div v-else-if="was_install">
                 <h4 class="subtitle">Thanks for installing {{ $root.$data.attrs.name }}!</h4>
 
                 <p>You can find your installed applications in your start menu.</p>
@@ -299,7 +306,8 @@ const CompleteView = {
     `,
     data: function() {
         return {
-            was_install: !this.$route.params.uninstall
+            was_install: !this.$route.params.uninstall,
+            was_update: this.$route.params.update
         }
     },
     methods: {
@@ -353,7 +361,7 @@ const ModifyView = {
     },
     methods: {
         update: function() {
-            router.push("/install/regular");
+            router.push("/install/update");
         },
         modify_packages: function() {
             router.push("/packages");
@@ -393,7 +401,7 @@ const router = new VueRouter({
             component: ErrorView
         },
         {
-            path: '/complete/:uninstall',
+            path: '/complete/:uninstall/:update',
             name: 'complete',
             component: CompleteView
         },

@@ -130,7 +130,7 @@ const SelectPackages = {
             </div>
 
             <a class="button is-dark is-pulled-right" v-if="!$root.$data.metadata.preexisting_install" 
-               v-on:click="install">Install!</a>
+               v-on:click="install">Install</a>
             <a class="button is-dark is-pulled-right" v-if="$root.$data.metadata.preexisting_install"
                v-on:click="install">Modify</a>
             <a class="button is-pulled-left" v-if="$root.$data.metadata.preexisting_install"

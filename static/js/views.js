@@ -102,7 +102,7 @@ const SelectPackages = {
             <div class="tile is-ancestor">
                 <div class="tile is-parent" v-for="package in $root.$data.config.packages" :index="package.name">
                     <div class="tile is-child">
-                        <div class="box">
+                        <div class="box clickable-box" v-on:click.capture.stop="package.default = !package.default">
                             <label class="checkbox">
                                 <input type="checkbox" v-model="package.default" />
                                 {{ package.name }}

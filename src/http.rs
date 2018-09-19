@@ -22,7 +22,7 @@ pub fn download_text(url: &str) -> Result<String, String> {
     let mut client = build_client()?
         .get(url)
         .send()
-        .map_err(|x| format!("Failed to GET resource: {:?}", v))?;
+        .map_err(|x| format!("Failed to GET resource: {:?}", x))?;
 
     client
         .text()
@@ -37,7 +37,7 @@ where
     let mut client = build_client()?
         .get(url)
         .send()
-        .map_err(|x| format!("Failed to GET resource: {:?}", v))?;
+        .map_err(|x| format!("Failed to GET resource: {:?}", x))?;
 
     let size = match client.headers().get(CONTENT_LENGTH) {
         Some(ref v) => v

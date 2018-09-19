@@ -37,3 +37,11 @@ pre {
 .has-padding {
     padding: 2rem;
 }
+
+.clickable-box {
+    cursor: pointer;
+}
+
+.clickable-box label {
+    pointer-events: none;
+}

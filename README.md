@@ -1,7 +1,7 @@
 <img src="banner.png" width="400px" />
     
-[Usage Documentation](https://liftinstall.jselby.net/user-guide/) 
-    - [Quick Start](https://liftinstall.jselby.net/user-guide/quick-start) 
+[Usage Documentation](https://liftinstall.jselby.net/) 
+    - [Quick Start](https://liftinstall.jselby.net/quick-start) 
     - [License](LICENSE)
 
 [![Build Status](https://travis-ci.org/j-selby/liftinstall.svg?branch=master)](https://travis-ci.org/j-selby/liftinstall)

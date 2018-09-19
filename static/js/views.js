@@ -96,7 +96,7 @@ const DownloadConfig = {
 const SelectPackages = {
     template: `
         <div class="column has-padding">
-            <h4 class="subtitle">Select your preferred settings:</h4>
+            <h4 class="subtitle">Select which packages you want to install:</h4>
 
             <!-- Build options -->
             <div class="tile is-ancestor">
@@ -129,16 +129,29 @@ const SelectPackages = {
                 </div>
             </div>
 
-            <div class="is-pulled-right">
-                <a class="button is-dark" v-if="!$root.$data.metadata.preexisting_install && !advanced" 
-                   v-on:click="advanced = true">Advanced...</a>
-                <a class="button is-dark" v-if="!$root.$data.metadata.preexisting_install" 
-                   v-on:click="install">Install</a>
-                <a class="button is-dark" v-if="$root.$data.metadata.preexisting_install"
-                   v-on:click="install">Modify</a>
+            <div class="is-right-floating is-bottom-floating">
+                <div class="field is-grouped">
+                    <p class="control">
+                        <a class="button is-medium" v-if="!$root.$data.metadata.preexisting_install && !advanced" 
+                           v-on:click="advanced = true">Advanced...</a>
+                    </p>
+                    <p class="control">
+                        <a class="button is-dark is-medium" v-if="!$root.$data.metadata.preexisting_install" 
+                           v-on:click="install">Install</a>
+                    </p>
+                    <p class="control">
+                        <a class="button is-dark is-medium" v-if="$root.$data.metadata.preexisting_install"
+                           v-on:click="install">Modify</a>
+                    </p>
+                </div>
             </div>
-            <a class="button is-pulled-left" v-if="$root.$data.metadata.preexisting_install"
-               v-on:click="go_back">Back</a>
+            
+            <div class="field is-grouped is-left-floating is-bottom-floating">
+                <p class="control">
+                    <a class="button is-medium" v-if="$root.$data.metadata.preexisting_install"
+                       v-on:click="go_back">Back</a>
+                </p>
+            </div>
         </div>
     `,
     data: function() {
@@ -268,7 +281,11 @@ const ErrorView = {
 
             <pre>{{ msg }}</pre>
 
-            <a class="button is-primary is-pulled-right" v-if="remaining" v-on:click="go_back">Back</a>
+            <div class="field is-grouped is-right-floating is-bottom-floating">
+                <p class="control">
+                    <a class="button is-primary is-medium" v-if="remaining" v-on:click="go_back">Back</a>
+                </p>
+            </div>
         </div>
     `,
     data: function() {
@@ -301,7 +318,11 @@ const CompleteView = {
                 <h4 class="subtitle">{{ $root.$data.attrs.name }} has been uninstalled.</h4>
             </div>
 
-            <a class="button is-dark is-pulled-right" v-on:click="exit">Exit</a>
+            <div class="field is-grouped is-right-floating is-bottom-floating">
+                <p class="control">
+                    <a class="button is-dark is-medium" v-on:click="exit">Exit</a>
+                </p>
+            </div>
         </div>
     `,
     data: function() {
@@ -322,19 +343,19 @@ const ModifyView = {
         <div class="column has-padding">
             <h4 class="subtitle">Choose an option:</h4>
 
-            <div class="field is-grouped">
+            <div class="field is-grouped is-bottom-floating">
                 <p class="control">
-                    <a class="button is-link" v-on:click="update">
+                    <a class="button is-link is-medium" v-on:click="update">
                         Update
                     </a>
                 </p>
                 <p class="control">
-                    <a class="button" v-on:click="modify_packages">
+                    <a class="button is-medium" v-on:click="modify_packages">
                         Modify
                     </a>
                 </p>
                 <p class="control">
-                    <a class="button is-danger" v-on:click="prepare_uninstall">
+                    <a class="button is-danger is-medium" v-on:click="prepare_uninstall">
                         Uninstall
                     </a>
                 </p>

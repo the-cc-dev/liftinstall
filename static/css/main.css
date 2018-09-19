@@ -36,6 +36,7 @@ pre {
 
 .has-padding {
     padding: 2rem;
+    position: relative;
 }
 
 .clickable-box {
@@ -44,4 +45,31 @@ pre {
 
 .clickable-box label {
     pointer-events: none;
+}
+
+.is-max-height {
+    height: 100%;
+}
+
+.is-bottom-floating {
+    position: absolute;
+    bottom: 0;
+}
+
+.is-right-floating {
+    position: absolute;
+    right: 0;
+}
+
+.has-padding .is-right-floating {
+    right: 1rem;
+}
+
+.is-left-floating {
+    position: absolute;
+    left: 0;
+}
+
+.has-padding .is-left-floating {
+    left: 1rem;
 }

@@ -84,7 +84,7 @@ use log::Level;
 
 use config::BaseAttributes;
 
-static RAW_CONFIG: &'static str = include_str!(concat!(env!("OUT_DIR"), "/config.toml"));
+static RAW_CONFIG: &'static str = include_str!(concat!(env!("OUT_DIR"), "/bootstrap.toml"));
 
 #[derive(Deserialize, Debug)]
 enum CallbackType {

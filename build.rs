@@ -79,12 +79,12 @@ fn main() {
     let os = OS.to_lowercase();
 
     // Find target config
-    let target_config = PathBuf::from(format!("config.{}.toml", os));
+    let target_config = PathBuf::from(format!("bootstrap.{}.toml", os));
 
     if !target_config.exists() {
         panic!(
             "There is no config file specified for the platform: {:?}. \
-             Create a file named \"config.{}.toml\" in the root directory.",
+             Create a file named \"bootstrap.{}.toml\" in the root directory.",
             os, os
         );
     }
@@ -103,7 +103,7 @@ fn main() {
     handle_binary(&config);
 
     // Copy for the main build
-    copy(&target_config, output_dir.join("config.toml")).expect("Unable to copy config file");
+    copy(&target_config, output_dir.join("bootstrap.toml")).expect("Unable to copy config file");
 
     // Copy files from static/ to build dir
     for entry in WalkDir::new("static") {

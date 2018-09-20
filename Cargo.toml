@@ -29,7 +29,7 @@ regex = "0.2"
 
 dirs = "1.0"
 zip = "0.4.2"
-xz-decom = {git = "https://github.com/j-selby/xz-decom.git", rev = "f5e9576"}
+xz-decom = {git = "https://github.com/j-selby/xz-decom.git", rev = "9ebf3d00d9ff909c39eec1d2cf7e6e068ce214e5"}
 tar = "0.4"
 
 log = "0.4"

@@ -568,7 +568,7 @@ dependencies = [
  "walkdir 2.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "web-view 0.2.1 (git+https://github.com/Boscop/web-view.git?rev=555f422d09cbb94e82a728d47e9e07ca91963f6e)",
  "winres 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "xz-decom 0.2.0 (git+https://github.com/j-selby/xz-decom.git?rev=f5e9576)",
+ "xz-decom 0.2.0 (git+https://github.com/j-selby/xz-decom.git?rev=9ebf3d00d9ff909c39eec1d2cf7e6e068ce214e5)",
  "zip 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1790,15 +1790,15 @@ dependencies = [
 [[package]]
 name = "xz-decom"
 version = "0.2.0"
-source = "git+https://github.com/j-selby/xz-decom.git?rev=f5e9576#f5e9576c71b7476689821991f51fcf0cdc93aa96"
+source = "git+https://github.com/j-selby/xz-decom.git?rev=9ebf3d00d9ff909c39eec1d2cf7e6e068ce214e5#9ebf3d00d9ff909c39eec1d2cf7e6e068ce214e5"
 dependencies = [
- "xz-embedded-sys 0.1.1 (git+https://github.com/j-selby/xz-decom.git?rev=f5e9576)",
+ "xz-embedded-sys 0.1.1 (git+https://github.com/j-selby/xz-decom.git?rev=9ebf3d00d9ff909c39eec1d2cf7e6e068ce214e5)",
 ]
 
 [[package]]
 name = "xz-embedded-sys"
 version = "0.1.1"
-source = "git+https://github.com/j-selby/xz-decom.git?rev=f5e9576#f5e9576c71b7476689821991f51fcf0cdc93aa96"
+source = "git+https://github.com/j-selby/xz-decom.git?rev=9ebf3d00d9ff909c39eec1d2cf7e6e068ce214e5#9ebf3d00d9ff909c39eec1d2cf7e6e068ce214e5"
 dependencies = [
  "cc 1.0.25 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2022,6 +2022,6 @@ dependencies = [
 "checksum winres 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "f07dabda4e79413ecac65bc9a2234ad3d85dc49f9d289f868cd9d8611d88f28d"
 "checksum ws2_32-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d59cefebd0c892fa2dd6de581e937301d8552cb44489cdff035c6187cb63fa5e"
 "checksum xattr 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "244c3741f4240ef46274860397c7c74e50eb23624996930e484c16679633a54c"
-"checksum xz-decom 0.2.0 (git+https://github.com/j-selby/xz-decom.git?rev=f5e9576)" = "<none>"
-"checksum xz-embedded-sys 0.1.1 (git+https://github.com/j-selby/xz-decom.git?rev=f5e9576)" = "<none>"
+"checksum xz-decom 0.2.0 (git+https://github.com/j-selby/xz-decom.git?rev=9ebf3d00d9ff909c39eec1d2cf7e6e068ce214e5)" = "<none>"
+"checksum xz-embedded-sys 0.1.1 (git+https://github.com/j-selby/xz-decom.git?rev=9ebf3d00d9ff909c39eec1d2cf7e6e068ce214e5)" = "<none>"
 "checksum zip 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "36b9e08fb518a65cf7e08a1e482573eb87a2f4f8c6619316612a3c1f162fe822"

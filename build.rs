@@ -4,9 +4,6 @@ extern crate walkdir;
 extern crate winres;
 
 #[cfg(windows)]
-extern crate bindgen;
-
-#[cfg(windows)]
 extern crate cc;
 
 extern crate serde;
@@ -53,16 +50,6 @@ fn handle_binary(config: &BaseAttributes) {
         &format!("{}_installer.exe", config.name),
     );
     res.compile().expect("Failed to generate metadata");
-
-    let bindings = bindgen::Builder::default()
-        .header("src/native/interop.h")
-        .generate()
-        .expect("Unable to generate bindings");
-
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    bindings
-        .write_to_file(out_path.join("interop.rs"))
-        .expect("Couldn't write bindings!");
 
     cc::Build::new()
         .cpp(true)

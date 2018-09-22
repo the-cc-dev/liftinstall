@@ -13,7 +13,15 @@ mod natives {
     use std::env;
     use std::process::Command;
 
-    include!(concat!(env!("OUT_DIR"), "/interop.rs"));
+    extern "C" {
+        pub fn saveShortcut(
+            shortcutPath: *const ::std::os::raw::c_char,
+            description: *const ::std::os::raw::c_char,
+            path: *const ::std::os::raw::c_char,
+            args: *const ::std::os::raw::c_char,
+            workingDir: *const ::std::os::raw::c_char,
+        ) -> ::std::os::raw::c_int;
+    }
 
     // Needed here for Windows interop
     #[allow(unsafe_code)]

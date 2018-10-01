@@ -4,6 +4,7 @@ use installer::InstallerFramework;
 
 use tasks::Task;
 use tasks::TaskDependency;
+use tasks::TaskMessage;
 use tasks::TaskParamType;
 
 use logging::LoggingErrors;
@@ -19,9 +20,12 @@ impl Task for InstallGlobalShortcutsTask {
         &mut self,
         _: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String> {
-        messenger("Generating global shortcut...", 0.0);
+        messenger(&TaskMessage::DisplayMessage(
+            "Generating global shortcut...",
+            0.0,
+        ));
 
         let path = context
             .install_path
@@ -45,7 +49,7 @@ impl Task for InstallGlobalShortcutsTask {
             .log_expect("Unable to build shortcut metadata (tool)");
 
         let shortcut_file = create_shortcut(
-            &format!("{} maintenance tool", context.base_attributes.name),
+            &format!("{} Maintenance Tool", context.base_attributes.name),
             &format!(
                 "Launch the {} Maintenance Tool to update, modify and uninstall the application.",
                 context.base_attributes.name

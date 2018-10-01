@@ -4,6 +4,7 @@ use installer::InstallerFramework;
 
 use tasks::Task;
 use tasks::TaskDependency;
+use tasks::TaskMessage;
 use tasks::TaskParamType;
 
 use config::PackageDescription;
@@ -21,12 +22,12 @@ impl Task for InstallShortcutsTask {
         &mut self,
         _: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String> {
-        messenger(
+        messenger(&TaskMessage::DisplayMessage(
             &format!("Generating shortcuts for package {:?}...", self.name),
             0.0,
-        );
+        ));
 
         let path = context
             .install_path

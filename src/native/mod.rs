@@ -70,7 +70,7 @@ mod natives {
     }
 
     /// Cleans up the installer
-    pub fn burn_on_exit(app_name : &str) {
+    pub fn burn_on_exit(app_name: &str) {
         let current_exe = env::current_exe().log_expect("Current executable could not be found");
         let path = current_exe
             .parent()
@@ -123,7 +123,7 @@ mod natives {
     }
 
     /// Cleans up the installer
-    pub fn burn_on_exit(app_name : &str) {
+    pub fn burn_on_exit(app_name: &str) {
         let current_exe = env::current_exe().log_expect("Current executable could not be found");
 
         // Thank god for *nix platforms

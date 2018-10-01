@@ -4,6 +4,7 @@ use installer::InstallerFramework;
 
 use tasks::Task;
 use tasks::TaskDependency;
+use tasks::TaskMessage;
 use tasks::TaskOrdering;
 use tasks::TaskParamType;
 
@@ -24,7 +25,7 @@ impl Task for DownloadPackageTask {
         &mut self,
         mut input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 1);
 
@@ -45,7 +46,10 @@ impl Task for DownloadPackageTask {
             }
         }
 
-        messenger(&format!("Downloading package {:?}...", self.name), 0.0);
+        messenger(&TaskMessage::DisplayMessage(
+            &format!("Downloading package {:?}...", self.name),
+            0.0,
+        ));
 
         let mut downloaded = 0;
         let mut data_storage: Vec<u8> = Vec::new();
@@ -73,13 +77,13 @@ impl Task for DownloadPackageTask {
                 Prefixed(prefix, n) => format!("{:.0} {}B", n, prefix),
             };
 
-            messenger(
+            messenger(&TaskMessage::DisplayMessage(
                 &format!(
                     "Downloading {} ({} of {})...",
                     self.name, pretty_current, pretty_total
                 ),
                 percentage,
-            );
+            ));
         })?;
 
         Ok(TaskParamType::FileContents(version, file, data_storage))

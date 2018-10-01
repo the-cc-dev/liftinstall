@@ -4,6 +4,7 @@ use installer::InstallerFramework;
 
 use tasks::Task;
 use tasks::TaskDependency;
+use tasks::TaskMessage;
 use tasks::TaskParamType;
 
 use std::fs::remove_file;
@@ -17,11 +18,14 @@ impl Task for UninstallGlobalShortcutsTask {
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 0);
 
-        messenger("Uninstalling global shortcut...", 0.0);
+        messenger(&TaskMessage::DisplayMessage(
+            "Uninstalling global shortcut...",
+            0.0,
+        ));
 
         while let Some(file) = context.database.shortcuts.pop() {
             info!("Deleting shortcut {:?}", file);

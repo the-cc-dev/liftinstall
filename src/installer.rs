@@ -30,6 +30,7 @@ use tasks::install::InstallTask;
 use tasks::uninstall::UninstallTask;
 use tasks::uninstall_global_shortcut::UninstallGlobalShortcutsTask;
 use tasks::DependencyTree;
+use tasks::TaskMessage;
 
 use logging::LoggingErrors;
 
@@ -45,6 +46,7 @@ use number_prefix::{decimal_prefix, Prefixed, Standalone};
 #[derive(Serialize)]
 pub enum InstallMessage {
     Status(String, f64),
+    PackageInstalled,
     Error(String),
     EOF,
 }
@@ -99,6 +101,24 @@ pub struct LocalInstallation {
     pub files: Vec<String>,
     /// Absolute paths to generated shortcut files
     pub shortcuts: Vec<String>,
+}
+
+macro_rules! declare_messenger_callback {
+    ($target:expr) => {
+        &|msg: &TaskMessage| match msg {
+            &TaskMessage::DisplayMessage(msg, progress) => {
+                if let Err(v) = $target.send(InstallMessage::Status(msg.to_string(), progress as _))
+                {
+                    error!("Failed to submit queue message: {:?}", v);
+                }
+            }
+            &TaskMessage::PackageInstalled => {
+                if let Err(v) = $target.send(InstallMessage::PackageInstalled) {
+                    error!("Failed to submit queue message: {:?}", v);
+                }
+            }
+        }
+    };
 }
 
 impl InstallerFramework {
@@ -170,11 +190,8 @@ impl InstallerFramework {
 
         info!("Dependency tree:\n{}", tree);
 
-        tree.execute(self, &|msg: &str, progress: f64| {
-            if let Err(v) = messages.send(InstallMessage::Status(msg.to_string(), progress as _)) {
-                error!("Failed to submit queue message: {:?}", v);
-            }
-        }).map(|_x| ())
+        tree.execute(self, declare_messenger_callback!(messages))
+            .map(|_x| ())
     }
 
     /// Sends a request for everything to be uninstalled.
@@ -192,22 +209,16 @@ impl InstallerFramework {
 
         info!("Dependency tree:\n{}", tree);
 
-        tree.execute(self, &|msg: &str, progress: f64| {
-            if let Err(v) = messages.send(InstallMessage::Status(msg.to_string(), progress as _)) {
-                error!("Failed to submit queue message: {:?}", v);
-            }
-        }).map(|_x| ())?;
+        tree.execute(self, declare_messenger_callback!(messages))
+            .map(|_x| ())?;
 
         // Uninstall shortcuts
         let task = Box::new(UninstallGlobalShortcutsTask {});
 
         let mut tree = DependencyTree::build(task);
 
-        tree.execute(self, &|msg: &str, progress: f64| {
-            if let Err(v) = messages.send(InstallMessage::Status(msg.to_string(), progress as _)) {
-                error!("Failed to submit queue message: {:?}", v);
-            }
-        }).map(|_x| ())?;
+        tree.execute(self, declare_messenger_callback!(messages))
+            .map(|_x| ())?;
 
         // Delete the metadata file
         let path = self

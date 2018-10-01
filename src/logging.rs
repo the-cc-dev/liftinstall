@@ -7,7 +7,7 @@ use log;
 use std::fmt::Debug;
 use std::io;
 
-pub fn setup_logger(file_name : String) -> Result<(), fern::InitError> {
+pub fn setup_logger(file_name: String) -> Result<(), fern::InitError> {
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(

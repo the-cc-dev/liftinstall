@@ -4,6 +4,7 @@ use installer::InstallerFramework;
 
 use tasks::Task;
 use tasks::TaskDependency;
+use tasks::TaskMessage;
 use tasks::TaskParamType;
 
 use std::fs::create_dir_all;
@@ -20,10 +21,13 @@ impl Task for VerifyInstallDirTask {
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 0);
-        messenger("Polling installation directory...", 0.0);
+        messenger(&TaskMessage::DisplayMessage(
+            "Polling installation directory...",
+            0.0,
+        ));
 
         let path = context
             .install_path

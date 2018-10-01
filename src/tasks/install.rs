@@ -10,6 +10,7 @@ use tasks::uninstall_pkg::UninstallPackageTask;
 use tasks::install_global_shortcut::InstallGlobalShortcutsTask;
 use tasks::Task;
 use tasks::TaskDependency;
+use tasks::TaskMessage;
 use tasks::TaskOrdering;
 use tasks::TaskParamType;
 
@@ -24,9 +25,9 @@ impl Task for InstallTask {
         &mut self,
         _: Vec<TaskParamType>,
         _: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String> {
-        messenger("Wrapping up...", 0.0);
+        messenger(&TaskMessage::DisplayMessage("Wrapping up...", 0.0));
         Ok(TaskParamType::None)
     }
 

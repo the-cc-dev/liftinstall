@@ -58,6 +58,12 @@ impl TaskDependency {
     }
 }
 
+/// A message from a task.
+pub enum TaskMessage<'a> {
+    DisplayMessage(&'a str, f64),
+    PackageInstalled,
+}
+
 /// A Task is a small, async task conforming to a fixed set of inputs/outputs.
 pub trait Task {
     /// Executes this individual task, evaluating to the given Output result.
@@ -67,7 +73,7 @@ pub trait Task {
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String>;
 
     /// Returns a vector containing all dependencies that need to be executed
@@ -113,7 +119,7 @@ impl DependencyTree {
     pub fn execute(
         &mut self,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String> {
         let total_tasks = (self.dependencies.len() + 1) as f64;
 
@@ -126,11 +132,14 @@ impl DependencyTree {
                 continue;
             }
 
-            let result = i.execute(context, &|msg: &str, progress: f64| {
-                messenger(
-                    msg,
-                    progress / total_tasks + (1.0 / total_tasks) * f64::from(count),
-                )
+            let result = i.execute(context, &|msg: &TaskMessage| match msg {
+                &TaskMessage::DisplayMessage(msg, progress) => {
+                    messenger(&TaskMessage::DisplayMessage(
+                        msg,
+                        progress / total_tasks + (1.0 / total_tasks) * f64::from(count),
+                    ))
+                }
+                _ => messenger(msg),
             })?;
 
             // Check to see if we skip matching other dependencies
@@ -149,11 +158,14 @@ impl DependencyTree {
 
         let task_result = self
             .task
-            .execute(inputs, context, &|msg: &str, progress: f64| {
-                messenger(
-                    msg,
-                    progress / total_tasks + (1.0 / total_tasks) * f64::from(count),
-                )
+            .execute(inputs, context, &|msg: &TaskMessage| match msg {
+                &TaskMessage::DisplayMessage(msg, progress) => {
+                    messenger(&TaskMessage::DisplayMessage(
+                        msg,
+                        progress / total_tasks + (1.0 / total_tasks) * f64::from(count),
+                    ))
+                }
+                _ => messenger(msg),
             })?;
 
         if let TaskParamType::Break = task_result {
@@ -166,11 +178,14 @@ impl DependencyTree {
                 continue;
             }
 
-            let result = i.execute(context, &|msg: &str, progress: f64| {
-                messenger(
-                    msg,
-                    progress / total_tasks + (1.0 / total_tasks) * f64::from(count),
-                )
+            let result = i.execute(context, &|msg: &TaskMessage| match msg {
+                &TaskMessage::DisplayMessage(msg, progress) => {
+                    messenger(&TaskMessage::DisplayMessage(
+                        msg,
+                        progress / total_tasks + (1.0 / total_tasks) * f64::from(count),
+                    ))
+                }
+                _ => messenger(msg),
             })?;
 
             // Check to see if we skip matching other dependencies

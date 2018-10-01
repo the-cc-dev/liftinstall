@@ -7,6 +7,7 @@ use tasks::TaskParamType;
 
 use tasks::uninstall_pkg::UninstallPackageTask;
 use tasks::TaskDependency;
+use tasks::TaskMessage;
 use tasks::TaskOrdering;
 
 pub struct UninstallTask {
@@ -18,9 +19,9 @@ impl Task for UninstallTask {
         &mut self,
         _: Vec<TaskParamType>,
         _: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String> {
-        messenger("Wrapping up...", 0.0);
+        messenger(&TaskMessage::DisplayMessage("Wrapping up...", 0.0));
         Ok(TaskParamType::None)
     }
 

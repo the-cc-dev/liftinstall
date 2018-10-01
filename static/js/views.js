@@ -313,6 +313,8 @@ const CompleteView = {
                 <h4 class="subtitle">Thanks for installing {{ $root.$data.attrs.name }}!</h4>
 
                 <p>You can find your installed applications in your start menu.</p>
+
+                <img src="/how-to-open.png" />
             </div>
             <div v-else>
                 <h4 class="subtitle">{{ $root.$data.attrs.name }} has been uninstalled.</h4>

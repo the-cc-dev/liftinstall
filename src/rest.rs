@@ -207,7 +207,7 @@ impl Service for WebService {
                 }
 
                 if framework.burn_after_exit {
-                    native::burn_on_exit();
+                    native::burn_on_exit(&framework.base_attributes.name);
                 }
 
                 exit(0);

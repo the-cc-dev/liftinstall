@@ -9,16 +9,27 @@ use std::time::Duration;
 
 use reqwest::Client;
 
+/// Asserts that a URL is valid HTTPS, else returns an error.
+pub fn assert_ssl(url: &str) -> Result<(), String> {
+    if url.starts_with("https://") {
+        Ok(())
+    } else {
+        Err(format!("Specified URL was not https"))
+    }
+}
+
 /// Builds a customised HTTP client.
 pub fn build_client() -> Result<Client, String> {
     Client::builder()
         .timeout(Duration::from_secs(8))
         .build()
-        .map_err(|x| format!("Unable to build cient: {:?}", x))
+        .map_err(|x| format!("Unable to build client: {:?}", x))
 }
 
 /// Downloads a text file from the specified URL.
 pub fn download_text(url: &str) -> Result<String, String> {
+    assert_ssl(url)?;
+
     let mut client = build_client()?
         .get(url)
         .send()
@@ -34,6 +45,8 @@ pub fn stream_file<F>(url: &str, mut callback: F) -> Result<(), String>
 where
     F: FnMut(Vec<u8>, u64) -> (),
 {
+    assert_ssl(url)?;
+
     let mut client = build_client()?
         .get(url)
         .send()

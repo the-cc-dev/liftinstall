@@ -70,7 +70,7 @@ mod natives {
     }
 
     /// Cleans up the installer
-    pub fn burn_on_exit() {
+    pub fn burn_on_exit(app_name : &str) {
         let current_exe = env::current_exe().log_expect("Current executable could not be found");
         let path = current_exe
             .parent()
@@ -83,7 +83,7 @@ mod natives {
             .log_expect("Unable to convert tool path to string")
             .replace(" ", "\\ ");
 
-        let log = path.join("installer.log");
+        let log = path.join(format!("{}_installer.log", app_name));
         let log = log
             .to_str()
             .log_expect("Unable to convert log path to string")
@@ -123,7 +123,7 @@ mod natives {
     }
 
     /// Cleans up the installer
-    pub fn burn_on_exit() {
+    pub fn burn_on_exit(app_name : &str) {
         let current_exe = env::current_exe().log_expect("Current executable could not be found");
 
         // Thank god for *nix platforms
@@ -134,7 +134,7 @@ mod natives {
 
         let current_dir = env::current_dir().log_expect("Current directory cannot be found");
 
-        if let Err(e) = remove_file(current_dir.join("installer.log")) {
+        if let Err(e) = remove_file(current_dir.join(format!("{}_installer.log", app_name))) {
             // No regular logging now.
             eprintln!("Failed to delete installer log: {:?}", e);
         };

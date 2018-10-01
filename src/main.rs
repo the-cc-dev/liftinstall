@@ -93,10 +93,10 @@ enum CallbackType {
 }
 
 fn main() {
-    logging::setup_logger().expect("Unable to setup logging!");
-
     let config =
-        BaseAttributes::from_toml_str(RAW_CONFIG).log_expect("Config file could not be read");
+        BaseAttributes::from_toml_str(RAW_CONFIG).expect("Config file could not be read");
+
+    logging::setup_logger(format!("{}_installer.log", config.name)).expect("Unable to setup logging!");
 
     let app_name = config.name.clone();
 

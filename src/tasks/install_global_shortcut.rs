@@ -47,7 +47,7 @@ impl Task for InstallGlobalShortcutsTask {
         let shortcut_file = create_shortcut(
             &format!("{} maintenance tool", context.base_attributes.name),
             &format!(
-                "Launch the {} maintenance tool to update, modify and uninstall the application.",
+                "Launch the {} Maintenance Tool to update, modify and uninstall the application.",
                 context.base_attributes.name
             ),
             tool_path,

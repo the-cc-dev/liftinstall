@@ -7,7 +7,7 @@ use log;
 use std::fmt::Debug;
 use std::io;
 
-pub fn setup_logger() -> Result<(), fern::InitError> {
+pub fn setup_logger(file_name : String) -> Result<(), fern::InitError> {
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
@@ -19,7 +19,7 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
             ))
         }).level(log::LevelFilter::Info)
         .chain(io::stdout())
-        .chain(fern::log_file("installer.log")?)
+        .chain(fern::log_file(file_name)?)
         .apply()?;
     Ok(())
 }

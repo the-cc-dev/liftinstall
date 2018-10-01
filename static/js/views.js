@@ -343,23 +343,21 @@ const ModifyView = {
         <div class="column has-padding">
             <h4 class="subtitle">Choose an option:</h4>
 
-            <div class="field is-grouped is-bottom-floating">
-                <p class="control">
-                    <a class="button is-link is-medium" v-on:click="update">
-                        Update
-                    </a>
-                </p>
-                <p class="control">
-                    <a class="button is-medium" v-on:click="modify_packages">
-                        Modify
-                    </a>
-                </p>
-                <p class="control">
-                    <a class="button is-danger is-medium" v-on:click="prepare_uninstall">
-                        Uninstall
-                    </a>
-                </p>
-            </div>
+            <a class="button is-dark is-medium" v-on:click="update">
+                Update
+            </a>
+            <br />
+            <br />
+            
+            <a class="button is-dark is-medium" v-on:click="modify_packages">
+                Modify
+            </a>
+            <br />
+            <br />
+            
+            <a class="button is-dark is-medium" v-on:click="prepare_uninstall">
+                Uninstall
+            </a>
             
             <div class="modal is-active" v-if="show_uninstall">
                 <div class="modal-background"></div>

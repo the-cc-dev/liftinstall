@@ -1,4 +1,5 @@
 installing_message = "Reminder: yuzu is an <b>experimental</b> emulator. Stuff will break!"
+hide_advanced = true
 
 [[packages]]
 name = "yuzu Nightly"

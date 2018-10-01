@@ -64,6 +64,8 @@ pub struct Config {
     #[serde(default)]
     pub new_tool: Option<String>,
     pub packages: Vec<PackageDescription>,
+    #[serde(default)]
+    pub hide_advanced: bool,
 }
 
 impl Config {

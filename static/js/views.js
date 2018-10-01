@@ -132,7 +132,7 @@ const SelectPackages = {
             <div class="is-right-floating is-bottom-floating">
                 <div class="field is-grouped">
                     <p class="control">
-                        <a class="button is-medium" v-if="!$root.$data.metadata.preexisting_install && !advanced" 
+                        <a class="button is-medium" v-if="!$root.$data.config.hide_advanced && !$root.$data.metadata.preexisting_install && !advanced" 
                            v-on:click="advanced = true">Advanced...</a>
                     </p>
                     <p class="control">

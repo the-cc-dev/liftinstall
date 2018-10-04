@@ -8,6 +8,7 @@ use tasks::save_database::SaveDatabaseTask;
 use tasks::uninstall_pkg::UninstallPackageTask;
 use tasks::Task;
 use tasks::TaskDependency;
+use tasks::TaskMessage;
 use tasks::TaskOrdering;
 use tasks::TaskParamType;
 
@@ -33,9 +34,12 @@ impl Task for InstallPackageTask {
         &mut self,
         mut input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String> {
-        messenger(&format!("Installing package {:?}...", self.name), 0.0);
+        messenger(&TaskMessage::DisplayMessage(
+            &format!("Installing package {:?}...", self.name),
+            0.0,
+        ));
 
         let path = context
             .install_path
@@ -91,16 +95,16 @@ impl Task for InstallPackageTask {
 
             match &archive_size {
                 Some(size) => {
-                    messenger(
+                    messenger(&TaskMessage::DisplayMessage(
                         &format!("Extracting {} ({} of {})", string_name, i + 1, size),
                         (i as f64) / (*size as f64),
-                    );
+                    ));
                 }
                 _ => {
-                    messenger(
+                    messenger(&TaskMessage::DisplayMessage(
                         &format!("Extracting {} ({} of ??)", string_name, i + 1),
                         0.0,
-                    );
+                    ));
                 }
             }
 
@@ -169,6 +173,8 @@ impl Task for InstallPackageTask {
             shortcuts,
             files: installed_files,
         });
+
+        messenger(&TaskMessage::PackageInstalled);
 
         Ok(TaskParamType::None)
     }

@@ -6,6 +6,7 @@ use installer::InstallerFramework;
 
 use tasks::Task;
 use tasks::TaskDependency;
+use tasks::TaskMessage;
 use tasks::TaskParamType;
 
 use config::PackageDescription;
@@ -23,7 +24,7 @@ impl Task for ResolvePackageTask {
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 0);
         let mut metadata: Option<PackageDescription> = None;
@@ -44,20 +45,20 @@ impl Task for ResolvePackageTask {
             None => return Err(format!("Package {:?} could not be found.", self.name)),
         };
 
-        messenger(
+        messenger(&TaskMessage::DisplayMessage(
             &format!(
                 "Polling {} for latest version of {:?}...",
                 package.source.name, package.name
             ),
             0.0,
-        );
+        ));
 
         let results = package.source.get_current_releases()?;
 
-        messenger(
+        messenger(&TaskMessage::DisplayMessage(
             &format!("Resolving dependency for {:?}...", package.name),
             0.5,
-        );
+        ));
 
         let filtered_regex = package.source.match_regex.replace("#PLATFORM#", OS);
         let regex = match Regex::new(&filtered_regex) {

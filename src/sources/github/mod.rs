@@ -45,8 +45,17 @@ impl ReleaseSource for GithubReleases {
             .send()
             .map_err(|x| format!("Error while sending HTTP request: {:?}", x))?;
 
-        if response.status() != StatusCode::OK {
-            return Err(format!("Bad status code: {:?}", response.status()));
+        match response.status() {
+            StatusCode::OK => {}
+            StatusCode::FORBIDDEN => {
+                return Err(format!(
+                    "GitHub is rate limiting you. Try moving to a internet connection \
+                     that isn't shared, and/or disabling VPNs."
+                ));
+            }
+            _ => {
+                return Err(format!("Bad status code: {:?}.", response.status()));
+            }
         }
 
         let body = response

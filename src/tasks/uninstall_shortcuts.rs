@@ -4,6 +4,7 @@ use installer::InstallerFramework;
 
 use tasks::Task;
 use tasks::TaskDependency;
+use tasks::TaskMessage;
 use tasks::TaskParamType;
 
 use installer::LocalInstallation;
@@ -23,7 +24,7 @@ impl Task for UninstallShortcutsTask {
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 0);
 
@@ -54,10 +55,10 @@ impl Task for UninstallShortcutsTask {
             }
         };
 
-        messenger(
+        messenger(&TaskMessage::DisplayMessage(
             &format!("Uninstalling shortcuts for package {:?}...", self.name),
             0.0,
-        );
+        ));
 
         // Reverse, as to delete directories last
         package.files.reverse();
@@ -68,10 +69,10 @@ impl Task for UninstallShortcutsTask {
             let file = path.join(file);
             info!("Deleting shortcut {:?}", file);
 
-            messenger(
+            messenger(&TaskMessage::DisplayMessage(
                 &format!("Deleting shortcut {} ({} of {})", name, i + 1, max),
                 (i as f64) / (max as f64),
-            );
+            ));
 
             let result = if file.is_dir() {
                 remove_dir(file)

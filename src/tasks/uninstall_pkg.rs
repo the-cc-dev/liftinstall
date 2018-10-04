@@ -5,6 +5,7 @@ use installer::InstallerFramework;
 use tasks::save_database::SaveDatabaseTask;
 use tasks::Task;
 use tasks::TaskDependency;
+use tasks::TaskMessage;
 use tasks::TaskOrdering;
 use tasks::TaskParamType;
 
@@ -26,7 +27,7 @@ impl Task for UninstallPackageTask {
         &mut self,
         input: Vec<TaskParamType>,
         context: &mut InstallerFramework,
-        messenger: &Fn(&str, f64),
+        messenger: &Fn(&TaskMessage),
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 1);
 
@@ -57,7 +58,10 @@ impl Task for UninstallPackageTask {
             }
         };
 
-        messenger(&format!("Uninstalling package {:?}...", self.name), 0.0);
+        messenger(&TaskMessage::DisplayMessage(
+            &format!("Uninstalling package {:?}...", self.name),
+            0.0,
+        ));
 
         // Reverse, as to delete directories last
         package.files.reverse();
@@ -68,10 +72,10 @@ impl Task for UninstallPackageTask {
             let file = path.join(file);
             info!("Deleting {:?}", file);
 
-            messenger(
+            messenger(&TaskMessage::DisplayMessage(
                 &format!("Deleting {} ({} of {})", name, i + 1, max),
                 (i as f64) / (max as f64),
-            );
+            ));
 
             let result = if file.is_dir() {
                 remove_dir(file)

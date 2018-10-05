@@ -141,14 +141,29 @@ fn main() {
             to_path.display()
         );
 
-        if cfg!(windows) {
-            use std::fs::copy;
+        // Attempt it a few times because Windows can hold a lock
+        for i in 1..=5 {
+            let swap_result = if cfg!(windows) {
+                use std::fs::copy;
 
-            copy(&current_exe, &to_path).log_expect("Unable to copy new installer");
-        } else {
-            use std::fs::rename;
+                copy(&current_exe, &to_path).map(|_x| ())
+            } else {
+                use std::fs::rename;
 
-            rename(&current_exe, &to_path).log_expect("Unable to move new installer");
+                rename(&current_exe, &to_path)
+            };
+
+            match swap_result {
+                Ok(_) => break,
+                Err(e) => {
+                    if i < 5 {
+                        info!("Copy attempt failed: {:?}, retrying in 3 seconds.", e);
+                        thread::sleep(time::Duration::from_millis(3000));
+                    } else {
+                        let _: () = Err(e).log_expect("Copying new binary failed");
+                    }
+                }
+            }
         }
 
         Command::new(to_path)
@@ -158,6 +173,7 @@ fn main() {
         exit(0);
     }
 
+    // If we just finished a update, we need to inject our previous command line arguments
     let args_file = current_path.join("args.json");
 
     if args_file.exists() {
@@ -170,18 +186,32 @@ fn main() {
 
         matches = reinterpret_app.get_matches_from(database);
 
-        info!("Reparsed command line arguments from original instance");
+        info!("Parsed command line arguments from original instance");
         remove_file(args_file).log_expect("Unable to clean up args file");
+    }
 
-        if cfg!(windows) {
-            let updater_executable = current_path.join("maintenancetool.exe");
+    // Cleanup any remaining new maintenance tool instances if they exist
+    if cfg!(windows) {
+        let updater_executable = current_path.join("maintenancetool_new.exe");
 
+        if updater_executable.exists() {
             // Sleep a little bit to allow Windows to close the previous file handle
             thread::sleep(time::Duration::from_millis(3000));
 
-            if updater_executable.exists() {
-                remove_file(updater_executable)
-                    .log_expect("Unable to clean up previous updater file");
+            // Attempt it a few times because Windows can hold a lock
+            for i in 1..=5 {
+                let swap_result = remove_file(&updater_executable);
+                match swap_result {
+                    Ok(_) => break,
+                    Err(e) => {
+                        if i < 5 {
+                            info!("Cleanup attempt failed: {:?}, retrying in 3 seconds.", e);
+                            thread::sleep(time::Duration::from_millis(3000));
+                        } else {
+                            warn!("Deleting temp binary failed after 5 attempts: {:?}", e);
+                        }
+                    }
+                }
             }
         }
     }

@@ -44,7 +44,7 @@ impl Task for VerifyInstallDirTask {
                 .map_err(|x| format!("Failed to read install destination: {:?}", x))?;
 
             if paths.count() != 0 {
-                return Err(format!("Install destination ({:?}) is not empty.", context.install_path));
+                return Err(format!("Install destination ({:?}) is not empty.", path));
             }
         }
 

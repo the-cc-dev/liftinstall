@@ -2,12 +2,13 @@
 
 use installer::InstallerFramework;
 
+use tasks::ensure_only_instance::EnsureOnlyInstanceTask;
 use tasks::install_dir::VerifyInstallDirTask;
+use tasks::install_global_shortcut::InstallGlobalShortcutsTask;
 use tasks::install_pkg::InstallPackageTask;
 use tasks::save_executable::SaveExecutableTask;
 use tasks::uninstall_pkg::UninstallPackageTask;
 
-use tasks::install_global_shortcut::InstallGlobalShortcutsTask;
 use tasks::Task;
 use tasks::TaskDependency;
 use tasks::TaskMessage;
@@ -33,6 +34,11 @@ impl Task for InstallTask {
 
     fn dependencies(&self) -> Vec<TaskDependency> {
         let mut elements = Vec::new();
+
+        elements.push(TaskDependency::build(
+            TaskOrdering::Pre,
+            Box::new(EnsureOnlyInstanceTask {}),
+        ));
 
         elements.push(TaskDependency::build(
             TaskOrdering::Pre,

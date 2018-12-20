@@ -20,6 +20,7 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::process::exit;
 use std::process::Command;
+use std::process::Stdio;
 use std::sync::mpsc::channel;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -202,6 +203,8 @@ impl Service for WebService {
 
                 if let Some(ref v) = framework.launcher_path {
                     Command::new(v)
+                        .stdout(Stdio::null())
+                        .stderr(Stdio::null())
                         .spawn()
                         .log_expect("Unable to start child process");
                 }

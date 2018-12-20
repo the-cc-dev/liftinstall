@@ -10,6 +10,7 @@ use sources::types::File;
 use sources::types::Version;
 
 pub mod download_pkg;
+pub mod ensure_only_instance;
 pub mod install;
 pub mod install_dir;
 pub mod install_global_shortcut;

@@ -14,6 +14,22 @@
     <link rel="stylesheet" href="/css/main.css" type="text/css">
 </head>
 <body class="is-max-height">
+    <div class="fullscreen" id="ie-blackout" style="display: none">
+        <div class="title">Your computer is out of date.</div>
+        <div class="subtitle">
+            Make sure that your computer is up to date, and that you have Internet Explorer 11 installed.
+        </div>
+        <div class="subtitle">
+            Please note we do not support pirated or unsupported versions of Windows.
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        if (!document.__proto__) {
+            document.getElementById("ie-blackout").style.display = "block";
+        }
+    </script>
+
     <div id="app" class="is-max-height">
         <section class="section is-max-height">
             <div class="container is-max-height">

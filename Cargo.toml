@@ -38,8 +38,6 @@ chrono = "0.4.5"
 
 clap = "2.32.0"
 
-sysinfo = "*"
-
 [build-dependencies]
 walkdir = "2"
 serde = "1.0.27"
@@ -49,6 +47,8 @@ toml = "0.4"
 [target.'cfg(windows)'.dependencies]
 # NFD is needed on Windows, as web-view doesn't work correctly here
 nfd = "0.0.4"
+
+winapi = { version = "0.3", features = ["psapi", "winbase", "winioctl", "winnt"] }
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"

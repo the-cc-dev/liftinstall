@@ -41,7 +41,7 @@ extern crate chrono;
 
 extern crate clap;
 
-extern crate sysinfo;
+extern crate winapi;
 
 mod archives;
 mod assets;

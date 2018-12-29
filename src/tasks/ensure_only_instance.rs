@@ -7,10 +7,10 @@ use tasks::TaskDependency;
 use tasks::TaskMessage;
 use tasks::TaskParamType;
 
-use sysinfo;
-use sysinfo::get_current_pid;
-use sysinfo::ProcessExt;
-use sysinfo::SystemExt;
+use native::Process;
+use native::get_process_names;
+
+use std::process;
 
 pub struct EnsureOnlyInstanceTask {}
 
@@ -23,14 +23,13 @@ impl Task for EnsureOnlyInstanceTask {
     ) -> Result<TaskParamType, String> {
         assert_eq!(input.len(), 0);
 
-        let system = sysinfo::System::new();
-        let current_pid = get_current_pid();
-        for (pid, process) in system.get_process_list() {
-            if pid == &current_pid {
+        let current_pid =  process::id() as usize;
+        for Process { pid, name } in get_process_names() {
+            if pid == current_pid {
                 continue;
             }
 
-            let exe = process.exe();
+            let exe = name;
 
             if exe.ends_with("maintenancetool.exe") || exe.ends_with("maintenancetool") {
                 return Err(format!("Maintenance tool is already running!"));
